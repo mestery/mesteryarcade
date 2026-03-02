@@ -601,58 +601,83 @@ function createExplosion(x, y, color) {
 }
 
 function drawBackground() {
-    // Sky gradient
+    // Sky gradient changes based on camera position (time of day effect)
+    const timeOfDay = (cameraOffset / 1000) % 1;
+    const skyTop = lerpColor('#0a0a1e', '#ff6b35', timeOfDay); // Dark to orange
+    const skyBottom = lerpColor('#1a1a2e', '#ff9f43', timeOfDay);
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#0a0a1e');
-    gradient.addColorStop(1, '#1a1a2e');
+    gradient.addColorStop(0, skyTop);
+    gradient.addColorStop(1, skyBottom);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Sun
-    const sunX = cameraOffset % (canvas.width + 200) - 100;
-    ctx.fillStyle = '#ffcc00';
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = '#ffaa00';
+    // Sun/Moon position based on camera
+    const sunX = 100 + (cameraOffset * 0.05) % (canvas.width + 200);
+    const sunY = 80 + Math.sin(cameraOffset * 0.002) * 40;
+    ctx.fillStyle = timeOfDay > 0.5 ? '#ffffcc' : '#ffcc00'; // White at day, yellow at night
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = ctx.fillStyle;
     ctx.beginPath();
-    ctx.arc(canvas.width / 2, 80, 40, 0, Math.PI * 2);
+    ctx.arc(sunX, sunY, 40, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
 
-    // Background mountains
-    ctx.fillStyle = '#16213e';
-    for (let i = 0; i < 5; i++) {
-        const mx = cameraOffset * 0.2 + i * 250;
+    // Background mountains (far parallax layer)
+    const mountainColor1 = lerpColor('#0f2b4d', '#ff8c42', timeOfDay);
+    const mountainColor2 = lerpColor('#16213e', '#ffa057', timeOfDay);
+    ctx.fillStyle = mountainColor1;
+    for (let i = -1; i < 6; i++) {
+        const mx = cameraOffset * 0.1 + i * 300;
         ctx.beginPath();
-        ctx.moveTo(mx, canvas.height - 100);
-        ctx.lineTo(mx + 125, canvas.height - 200);
-        ctx.lineTo(mx + 250, canvas.height - 100);
+        ctx.moveTo(mx, canvas.height);
+        ctx.lineTo(mx + 125, canvas.height - 250);
+        ctx.lineTo(mx + 250, canvas.height);
+        ctx.fill();
+    }
+    
+    // Second layer of mountains
+    ctx.fillStyle = mountainColor2;
+    for (let i = -1; i < 6; i++) {
+        const mx = cameraOffset * 0.15 + i * 400;
+        ctx.beginPath();
+        ctx.moveTo(mx, canvas.height);
+        ctx.lineTo(mx + 150, canvas.height - 200);
+        ctx.lineTo(mx + 300, canvas.height);
         ctx.fill();
     }
 
-    // Ground
-    ctx.fillStyle = '#3d2b1f';
+    // Ground based on camera position
+    const groundColor = getGroundColor(cameraOffset);
+    ctx.fillStyle = groundColor;
     ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
 
     // Ground details
-    ctx.fillStyle = '#2e1f14';
-    for (let i = 0; i < canvas.width + 200; i += 50) {
-        if ((i + cameraOffset / 10) % 137 < 25) {
-            ctx.fillRect((i + cameraOffset / 10) % (canvas.width + 200), canvas.height - 45, 10, 5);
+    const detailColor = getGroundDetailColor(cameraOffset);
+    ctx.fillStyle = detailColor;
+    for (let i = 0; i < canvas.width + 200; i += 60) {
+        if ((i + cameraOffset / 15) % 137 < 20) {
+            ctx.fillRect((i + cameraOffset / 15) % (canvas.width + 300), canvas.height - 45, 12, 5);
         }
     }
 
     // Platforms
     platforms.forEach(platform => {
-        ctx.fillStyle = '#8b4513';
+        const platformTopColor = (Math.floor(platform.x / 500) % 2 === 0) ? '#a0522d' : '#c18e62';
+        ctx.fillStyle = groundColor;
         ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-        ctx.fillStyle = '#a0522d';
-        ctx.fillRect(platform.x, platform.y, platform.width, 4);
+        ctx.fillStyle = platformTopColor;
+        ctx.fillRect(platform.x, platform.y, platform.width, 6);
     });
 
-    // Background objects
+    // Background objects (trees, rocks, clouds) - positioned based on camera
     backgroundObjects.forEach(obj => {
-        obj.draw();
+        if (obj.x > cameraOffset - 100 && obj.x < cameraOffset + canvas.width) {
+            obj.draw();
+        }
     });
+    
+    // Draw clouds moving independently
+    drawClouds();
 }
 
 function drawPlatforms() {
@@ -691,9 +716,10 @@ function initLevel() {
         });
     }
 
-    // Create background objects
-    for (let i = 0; i < 20; i++) {
-        const x = Math.random() * canvas.width;
+    // Create background objects spread across the entire level
+    backgroundObjects = [];
+    for (let i = 0; i < 60; i++) {
+        const x = Math.random() * 2000;
         const y = canvas.height - (Math.random() > 0.3 ? Math.random() * 40 : Math.random() * 100);
         const type = Math.floor(Math.random() * 3);
         backgroundObjects.push(new BackgroundObject(x, y, type));
@@ -894,6 +920,77 @@ window.addEventListener('keyup', (e) => {
 
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
+
+// Helper functions for background generation
+function lerpColor(a, b, amount) {
+    const aHex = hexToRgb(a);
+    const bHex = hexToRgb(b);
+    const r = Math.round(lerp(aHex.r, bHex.r, amount));
+    const g = Math.round(lerp(aHex.g, bHex.g, amount));
+    const bVal = Math.round(lerp(aHex.b, bHex.b, amount));
+    return `rgb(${r}, ${g}, ${bVal})`;
+}
+
+function lerp(start, end, amount) {
+    return start + (end - start) * amount;
+}
+
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+}
+
+function getGroundColor(offset) {
+    // Ground color changes based on camera position
+    const zone = Math.floor(offset / 500);
+    const colors = ['#3d2b1f', '#4a3c31', '#5e4b38', '#3d2b1f', '#6b5a45'];
+    return colors[zone % colors.length];
+}
+
+function getGroundDetailColor(offset) {
+    // Ground detail color changes based on camera position
+    const zone = Math.floor(offset / 500);
+    const colors = ['#2e1f14', '#3d2e21', '#4a3b2c', '#2e1f14', '#564635'];
+    return colors[zone % colors.length];
+}
+
+// Cloud data for parallax scrolling
+let clouds = [];
+function initClouds() {
+    clouds = [];
+    for (let i = 0; i < 15; i++) {
+        clouds.push({
+            x: Math.random() * 2000,
+            y: Math.random() * 150 + 20,
+            speed: 0.3 + Math.random() * 0.5,
+            scale: 0.8 + Math.random() * 1.2
+        });
+    }
+}
+
+function drawClouds() {
+    ctx.fillStyle = 'rgba(173, 216, 230, 0.9)';
+    clouds.forEach(cloud => {
+        // Parallax effect: clouds move slower than camera
+        const screenX = (cloud.x - cameraOffset * cloud.speed) % (canvas.width + 300);
+        const drawX = screenX < -100 ? screenX + canvas.width + 300 : screenX;
+        
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.arc(drawX, cloud.y, 25 * cloud.scale, 0, Math.PI * 2);
+        ctx.arc(drawX + 20, cloud.y - 10, 35 * cloud.scale, 0, Math.PI * 2);
+        ctx.arc(drawX + 45, cloud.y, 28 * cloud.scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+    });
+}
+
+// Initialize clouds on game load
+initClouds();
 
 // Initial render
 drawBackground();
