@@ -8,72 +8,223 @@ let score = 0;
 let lives = 3;
 let gameRunning = true;
 
-// Player object
+// Player object (Retro Arcade Style)
 const player = {
     x: 50,
     y: 400,
-    width: 30,
-    height: 30,
-    speed: 5,
-    jumpForce: 15,
+    width: 28,
+    height: 36,
+    speed: 4,
+    jumpForce: 18,
     velocityY: 0,
     isJumping: false,
-    color: '#0f0'
+    direction: 'right',
+    color: '#ff1a1a' // Classic red
 };
 
-// Platforms
+// Platforms (Retro Arcade Style with gradient and details)
 const platforms = [
-    { x: 0, y: 550, width: 800, height: 50, color: '#ff0' },
-    { x: 100, y: 450, width: 200, height: 20, color: '#ff0' },
-    { x: 400, y: 350, width: 200, height: 20, color: '#ff0' },
-    { x: 100, y: 250, width: 200, height: 20, color: '#ff0' },
-    { x: 500, y: 150, width: 200, height: 20, color: '#ff0' }
+    { x: 0, y: 560, width: 800, height: 40, color: '#c0392b', topColor: '#e74c3c' }, // Ground
+    { x: 80, y: 490, width: 250, height: 18, color: '#c0392b', topColor: '#e74c3c' },
+    { x: 450, y: 420, width: 270, height: 18, color: '#c0392b', topColor: '#e74c3c' },
+    { x: 50, y: 350, width: 240, height: 18, color: '#c0392b', topColor: '#e74c3c' },
+    { x: 480, y: 280, width: 270, height: 18, color: '#c0392b', topColor: '#e74c3c' }
 ];
 
-// Donkey Kong (enemy)
+// Donkey Kong (enemy - improved graphics)
 const donkeyKong = {
-    x: 700,
-    y: 100,
-    width: 50,
-    height: 50,
-    color: '#f00'
+    x: 680,
+    y: 110,
+    width: 56,
+    height: 48,
+    color: '#8b4513', // Brown fur
+    skinColor: '#deb887', // Skin
+    animateFrame: 0,
+    armDirection: 1
 };
 
-// Barrels (obstacles)
+// Barrels (obstacles - improved graphics with stripes)
 let barrels = [];
 
 // Game functions
 function drawPlayer() {
-    ctx.fillStyle = player.color;
-    ctx.fillRect(player.x, player.y, player.width, player.height);
+    const { x, y, width, height } = player;
     
-    // Simple player details
-    ctx.fillStyle = '#00f';
-    ctx.fillRect(player.x + 5, player.y + 5, 8, 8); // Eyes
+    // Draw body with retro styling
+    ctx.fillStyle = player.color;
+    ctx.fillRect(x, y + 10, width, height - 10);
+    
+    // Draw head
+    ctx.fillStyle = '#ffcc80'; // Skin tone
+    ctx.fillRect(x + 4, y, width - 8, 10);
+    
+    // Draw overalls (blue retro color)
+    ctx.fillStyle = '#2980b9';
+    ctx.fillRect(x + 4, y + 16, width - 8, height - 20);
+    
+    // Draw arms
+    ctx.fillStyle = '#ffcc80';
+    if (player.direction === 'right') {
+        ctx.fillRect(x + width - 2, y + 14, 6, 8); // Right arm
+        ctx.fillRect(x - 2, y + 14, 6, 8); // Left arm
+    } else {
+        ctx.fillRect(x - 2, y + 14, 6, 8); // Left arm
+        ctx.fillRect(x + width - 2, y + 14, 6, 8); // Right arm
+    }
+    
+    // Draw face details - eyes
+    ctx.fillStyle = '#000';
+    if (player.direction === 'right') {
+        ctx.fillRect(x + width - 10, y + 3, 2, 4); // Right eye
+        ctx.fillRect(x + width - 6, y + 3, 2, 4); // Left eye
+    } else {
+        ctx.fillRect(x + 6, y + 3, 2, 4); // Left eye
+        ctx.fillRect(x + 10, y + 3, 2, 4); // Right eye
+    }
+    
+    // Draw hat (red)
+    ctx.fillStyle = '#e74c3c';
+    ctx.fillRect(x + 2, y - 2, width - 4, 3);
+    
+    // Simple shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.fillRect(x + 4, y + height - 2, width - 8, 2);
 }
 
 function drawPlatforms() {
     platforms.forEach(platform => {
+        // Main platform body
         ctx.fillStyle = platform.color;
         ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+        
+        // Top highlight for 3D effect
+        ctx.fillStyle = platform.topColor;
+        ctx.fillRect(platform.x, platform.y, platform.width, 6);
+        
+        // Platform border
+        ctx.strokeStyle = '#5d4037';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
+        
+        // Add some "ladder rungs" pattern for texture
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        for (let i = 10; i < platform.width; i += 30) {
+            ctx.fillRect(platform.x + i, platform.y + 8, 2, platform.height - 16);
+        }
     });
 }
 
 function drawDonkeyKong() {
-    ctx.fillStyle = donkeyKong.color;
-    ctx.fillRect(donkeyKong.x, donkeyKong.y, donkeyKong.width, donkeyKong.height);
+    const { x, y, width, height } = donkeyKong;
     
-    // Simple Donkey Kong details
+    // Animate arm movement
+    if (Math.floor(Date.now() / 200) % 2 === 0) {
+        donkeyKong.armDirection = -donkeyKong.armDirection;
+    }
+    
+    // Draw body (brown fur)
+    ctx.fillStyle = donkeyKong.color;
+    ctx.fillRect(x + 10, y + 20, width - 20, height - 20);
+    
+    // Draw belly (lighter color)
+    ctx.fillStyle = '#a1887f';
+    ctx.fillRect(x + 20, y + 25, width - 40, height - 30);
+    
+    // Draw head
+    ctx.fillStyle = donkeyKong.color;
+    ctx.fillRect(x + 12, y, width - 24, 20);
+    
+    // Draw face
+    ctx.fillStyle = donkeyKong.skinColor;
+    ctx.fillRect(x + 16, y + 4, width - 32, 12);
+    
+    // Draw eyes (white with black pupils)
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x + 20, y + 6, 5, 5);
+    ctx.fillRect(x + width - 25, y + 6, 5, 5);
+    
     ctx.fillStyle = '#000';
-    ctx.fillRect(donkeyKong.x + 10, donkeyKong.y + 10, 8, 8); // Eyes
+    ctx.fillRect(x + 21, y + 7, 2, 3);
+    ctx.fillRect(x + width - 24, y + 7, 2, 3);
+    
+    // Draw eyebrows
+    ctx.fillStyle = '#4e342e';
+    if (donkeyKong.animateFrame % 10 < 5) {
+        ctx.fillRect(x + 22, y - 2, 8, 3);
+    } else {
+        ctx.fillRect(x + width - 30, y - 2, 8, 3);
+    }
+    
+    // Draw arms swinging
+    ctx.fillStyle = donkeyKong.color;
+    const armOffset = 4 * Math.sin(Date.now() / 150);
+    
+    // Left arm
+    ctx.save();
+    ctx.translate(x + 12, y + 25);
+    ctx.rotate(-Math.PI / 4 + armOffset * 0.1);
+    ctx.fillRect(0, 0, 6, 20);
+    ctx.restore();
+    
+    // Right arm
+    ctx.save();
+    ctx.translate(x + width - 12, y + 25);
+    ctx.rotate(Math.PI / 4 + armOffset * 0.1);
+    ctx.fillRect(0, 0, 6, 20);
+    ctx.restore();
+    
+    // Draw fingers
+    ctx.fillStyle = donkeyKong.skinColor;
+    if (donkeyKong.armDirection > 0) {
+        ctx.fillRect(x + width - 14, y + 23, 2, 6);
+        ctx.fillRect(x + width - 8, y + 25, 2, 6);
+    } else {
+        ctx.fillRect(x + 10, y + 23, 2, 6);
+        ctx.fillRect(x + 16, y + 25, 2, 6);
+    }
+    
+    // Draw legs
+    ctx.fillStyle = donkeyKong.color;
+    ctx.fillRect(x + 18, y + height - 12, 6, 12);
+    ctx.fillRect(x + width - 24, y + height - 12, 6, 12);
+    
+    // Draw feet
+    ctx.fillStyle = '#3e2723';
+    ctx.fillRect(x + 16, y + height, 10, 4);
+    ctx.fillRect(x + width - 26, y + height, 10, 4);
+    
+    // Add some fur texture
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.fillRect(x + 20, y + 30, 4, 10);
+    ctx.fillRect(x + width - 28, y + 35, 4, 10);
 }
 
 function drawBarrels() {
-    barrels.forEach(barrel => {
-        ctx.fillStyle = '#800';
-        ctx.beginPath();
-        ctx.arc(barrel.x, barrel.y, barrel.radius, 0, Math.PI * 2);
-        ctx.fill();
+    barrels.forEach((barrel, index) => {
+        // Rotate barrel animation
+        const rotation = (Date.now() / 50) * barrel.direction;
+        
+        ctx.save();
+        ctx.translate(barrel.x, barrel.y);
+        ctx.rotate(rotation);
+        
+        // Draw barrel body (brown wood)
+        const grad = ctx.createLinearGradient(-barrel.radius, -barrel.radius, barrel.radius, barrel.radius);
+        grad.addColorStop(0, '#8d6e63');
+        grad.addColorStop(0.5, '#a1887f');
+        grad.addColorStop(1, '#6d4c41');
+        ctx.fillStyle = grad;
+        ctx.fillRect(-barrel.radius, -barrel.radius / 2, barrel.radius * 2, barrel.radius);
+        
+        // Draw barrel hoops (metal)
+        ctx.fillStyle = '#95a5a6';
+        ctx.fillRect(-barrel.radius, -barrel.radius / 2 + 2, 4, barrel.radius - 4);
+        ctx.fillRect(barrel.radius - 4, -barrel.radius / 2 + 2, 4, barrel.radius - 4);
+        
+        // Draw barrel middle hoop
+        ctx.fillRect(-2, -barrel.radius / 2 + 4, 4, barrel.radius - 8);
+        
+        ctx.restore();
     });
 }
 
@@ -179,36 +330,55 @@ function updateGameInfo() {
 }
 
 function gameLoop() {
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Draw background gradient (retro arcade style)
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    bgGradient.addColorStop(0, '#1a237e'); // Deep blue
+    bgGradient.addColorStop(0.5, '#4a148c'); // Purple
+    bgGradient.addColorStop(1, '#3e2723'); // Dark brown
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // Draw decorative elements (clouds in background)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.beginPath();
+    ctx.arc(100, 80, 25, 0, Math.PI * 2);
+    ctx.arc(130, 85, 20, 0, Math.PI * 2);
+    ctx.arc(160, 75, 25, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.arc(600, 120, 30, 0, Math.PI * 2);
+    ctx.arc(640, 115, 25, 0, Math.PI * 2);
+    ctx.arc(670, 125, 30, 0, Math.PI * 2);
+    ctx.fill();
+
     if (gameRunning) {
         // Update game state
         updatePlayer();
         updateBarrels();
         spawnBarrel();
         checkCollisions();
-        
+
         // Update score only when game is running (not at game over)
         if (gameRunning) {
             score += 1;
         }
         updateGameInfo();
-        
+
         // Draw everything
         drawPlatforms();
         drawDonkeyKong();
         drawBarrels();
         drawPlayer();
     }
-    
+
     requestAnimationFrame(gameLoop);
 }
 
 // Handle keyboard input
 document.addEventListener('keydown', (e) => {
     if (!gameRunning) return;
-    
+
     switch(e.key) {
         case 'ArrowLeft':
             player.x -= player.speed;
@@ -220,12 +390,18 @@ document.addEventListener('keydown', (e) => {
             if (!player.isJumping) {
                 player.velocityY = -player.jumpForce;
                 player.isJumping = true;
+            } else if (player.velocityY < 0) {
+                // Double jump
+                player.velocityY = -player.jumpForce * 0.8;
             }
             break;
         case ' ':
             if (!player.isJumping) {
                 player.velocityY = -player.jumpForce;
                 player.isJumping = true;
+            } else if (player.velocityY < 0) {
+                // Double jump
+                player.velocityY = -player.jumpForce * 0.8;
             }
             break;
     }
