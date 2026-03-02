@@ -29,6 +29,10 @@ docker run -d -p 8080:80 --name mestery-arcade mestery-arcade
   - `index.html` - Donkey Kong game HTML
   - `script.js` - Donkey Kong game JavaScript
   - `style.css` - Donkey Kong game CSS
+- `contra/` - Directory containing the Contra game
+  - `index.html` - Contra game HTML
+  - `script.js` - Contra game JavaScript
+  - `style.css` - Contra game CSS
 - `mrspacman/` - Directory containing the Mr. Pacman game
   - `index.html` - Mr. Pacman game HTML
   - `script.js` - Mr. Pacman game JavaScript

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONTRA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>CONTRA</h1>
+        <div class="game-info">
+            <div class="score">SCORE: <span id="score">0</span></div>
+            <div class="lives">LIVES: <span id="lives">3</span></div>
+            <div class="level">LEVEL: <span id="level">1</span></div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="450"></canvas>
+        <div class="controls">
+            <p>Controls: Arrow Keys to Move | Z to Jump | X to Shoot</p>
+        </div>
+        <div class="start-screen" id="startScreen">
+            <h2>CONTRA</h2>
+            <p class="subtitle">JOIN THE LEGENDARY SURVIVAL SHOOTER</p>
+            <button id="startBtn">INSERT COIN / START GAME</button>
+        </div>
+        <div class="game-over" id="gameOver">
+            <h2>GAME OVER</h2>
+            <p>FINAL SCORE: <span id="finalScore">0</span></p>
+            <button id="restartBtn">TRY AGAIN</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
