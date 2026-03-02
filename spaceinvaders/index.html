@@ -8,19 +8,40 @@
 </head>
 <body>
     <div id="game-container">
+        <!-- CRT corner decorations -->
+        <div class="crt-corner tl"></div>
+        <div class="crt-corner tr"></div>
+        <div class="crt-corner bl"></div>
+        <div class="crt-corner br"></div>
+
+        <!-- CRT scanline effect -->
+        <div class="scanlines"></div>
+        <div class="crt-flicker"></div>
+
         <canvas id="gameCanvas" width="800" height="600"></canvas>
+
         <div id="game-info">
-            <div id="score">Score: 0</div>
-            <div id="lives">Lives: 3</div>
+            <div class="score-board">
+                <div id="high-score">HIGH SCORE: 0</div>
+                <div id="score">SCORE: 0</div>
+            </div>
+            <div id="lives">LIVES: 3</div>
         </div>
+
         <div id="game-over" class="hidden">
-            <h2>Game Over</h2>
+            <h2>GAME OVER</h2>
             <p>Your final score: <span id="final-score">0</span></p>
             <button id="restart-button">Play Again</button>
         </div>
+
         <div id="start-screen">
-            <h2>Space Invaders</h2>
-            <p>Use ← → to move and SPACE to shoot</p>
+            <h2 class="title-logo">SPACE INVADERS</h2>
+            <p class="subtitle">DEFEND EARTH FROM THE ALIENS!</p>
+            <div class="score-board">
+                <div id="high-score-start">HIGH SCORE: 0</div>
+            </div>
+            <p>Use <strong>&larr; &rarr;</strong> to move</p>
+            <p>Use <strong>SPACE</strong> to shoot</p>
             <button id="start-button">Start Game</button>
         </div>
     </div>
