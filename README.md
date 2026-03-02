@@ -12,6 +12,10 @@ Mestery Arcade is a collection of web-based games built with HTML, CSS, and Java
   - `index.html` - Donkey Kong game HTML
   - `script.js` - Donkey Kong game JavaScript
   - `style.css` - Donkey Kong game CSS
+- `mrspacman/` - Directory containing the Mr. Pacman game
+  - `index.html` - Mr. Pacman game HTML
+  - `script.js` - Mr. Pacman game JavaScript
+  - `style.css` - Mr. Pacman game CSS
 
 ## Game Development Guidelines
 1. Follow modern web development practices
