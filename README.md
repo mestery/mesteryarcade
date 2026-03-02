@@ -2,6 +2,23 @@
 
 Mestery Arcade is a collection of web-based games built with HTML, CSS, and JavaScript. It serves as a central hub for multiple arcade-style games.
 
+## Quick Start with Docker
+
+```bash
+# Build the Docker image
+docker build -t mestery-arcade .
+
+# Run the container
+docker run -p 8080:80 mestery-arcade
+
+# Visit http://localhost:8080 to play
+```
+
+To run in detached mode:
+```bash
+docker run -d -p 8080:80 --name mestery-arcade mestery-arcade
+```
+
 ## Project Structure
 - `index.html` - Main arcade page with game selection interface
 - `spaceinvaders/` - Directory containing the Space Invaders game
