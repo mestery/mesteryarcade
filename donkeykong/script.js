@@ -250,15 +250,15 @@ function updatePlayer() {
     if (keys['ArrowRight']) {
         player.x += player.speed;
     }
-    
+
     // Apply gravity
     if (player.isJumping) {
         player.velocityY += 0.8;
     }
-    
+
     // Update position
     player.y += player.velocityY;
-    
+
     // Platform collision detection - Check all platforms for collisions
     let onPlatform = false;
     platforms.forEach(platform => {
@@ -274,14 +274,33 @@ function updatePlayer() {
             onPlatform = true;
         }
     });
-    
+
+    // Check if player is no longer standing on a platform (when moving horizontally)
+    if (!onPlatform && player.isJumping === false) {
+        // Player has moved past the platform edge, should start falling
+        let isOnPlatform = false;
+        platforms.forEach(platform => {
+            if (player.x + player.width > platform.x &&
+                player.x < platform.x + platform.width &&
+                player.y + player.height >= platform.y &&
+                player.y + player.height <= platform.y + 10) {
+                isOnPlatform = true;
+            }
+        });
+        
+        // If not on a platform, start falling
+        if (!isOnPlatform) {
+            player.isJumping = true;
+        }
+    }
+
     // Ground collision (when not on any platform)
     if (!onPlatform && player.y > canvas.height - player.height) {
         player.y = canvas.height - player.height;
         player.velocityY = 0;
         player.isJumping = false;
     }
-    
+
     // Keep player within bounds
     if (player.x < 0) {
         player.x = 0;
