@@ -8,6 +8,10 @@ Mestery Arcade is a collection of web-based games built with HTML, CSS, and Java
   - `index.html` - Space Invaders game HTML
   - `script.js` - Space Invaders game JavaScript
   - `style.css` - Space Invaders game CSS
+- `donkeykong/` - Directory containing the Donkey Kong game
+  - `index.html` - Donkey Kong game HTML
+  - `script.js` - Donkey Kong game JavaScript
+  - `style.css` - Donkey Kong game CSS
 
 ## Game Development Guidelines
 1. Follow modern web development practices

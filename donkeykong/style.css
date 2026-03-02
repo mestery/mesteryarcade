@@ -1,0 +1,54 @@
+body {
+    font-family: 'Courier New', monospace;
+    background-color: #000;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+h1 {
+    color: #ff0;
+    text-shadow: 0 0 10px #ff0;
+    margin-bottom: 10px;
+}
+
+#game-info {
+    display: flex;
+    justify-content: space-between;
+    width: 800px;
+    background-color: #111;
+    padding: 10px;
+    border: 2px solid #ff0;
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+}
+
+#score, #lives {
+    font-size: 20px;
+    color: #0f0;
+}
+
+#game-canvas {
+    border: 2px solid #ff0;
+    background-color: #000;
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
+}
+
+#game-controls {
+    background-color: #111;
+    padding: 10px;
+    border: 2px solid #ff0;
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+}
+
+#game-controls p {
+    margin: 0;
+    color: #0f0;
+}
