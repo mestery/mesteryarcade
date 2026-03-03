@@ -40,9 +40,19 @@
             <div class="score-board">
                 <div id="high-score-start">HIGH SCORE: 0</div>
             </div>
-            <p>Use <strong>&larr; &rarr;</strong> to move</p>
-            <p>Use <strong>SPACE</strong> to shoot</p>
+            <p class="desktop-hint">Use <strong>&larr; &rarr;</strong> to move</p>
+            <p class="desktop-hint">Use <strong>SPACE</strong> to shoot</p>
+            <div class="mobile-hint">Tap buttons to play</div>
             <button id="start-button">Start Game</button>
+        </div>
+
+        <!-- Mobile touch controls -->
+        <div id="mobile-controls">
+            <div class="control-row">
+                <button id="move-left" class="mobile-btn" aria-label="Move Left">←</button>
+                <button id="shoot" class="mobile-btn shoot-btn" aria-label="Shoot">●</button>
+                <button id="move-right" class="mobile-btn" aria-label="Move Right">→</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>

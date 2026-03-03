@@ -209,6 +209,151 @@ button:focus {
     display: none;
 }
 
+/* Mobile touch controls - visible during gameplay */
+#mobile-controls {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    pointer-events: auto;
+    width: 100%;
+    max-width: 600px;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+#game-container.has-controls #mobile-controls {
+    display: flex !important;
+}
+
+/* Show mobile controls on touch devices by default (with media query) */
+@media (hover: none) and (pointer: coarse), (max-width: 768px) {
+    #game-container.has-controls #mobile-controls {
+        display: flex !important;
+    }
+}
+
+.control-row {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+}
+
+.mobile-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: rgba(0, 255, 0, 0.3);
+    border: 3px solid #00ff00;
+    color: #fff;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow:
+        0 4px 15px rgba(0, 255, 0, 0.4),
+        inset 0 0 10px rgba(0, 255, 0, 0.3);
+    transition: all 0.1s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* iOS specific fix for active state */
+.mobile-btn::-webkit-media-controls-start-playback-button {
+    display: none !important;
+}
+
+/* Optimized button sizes for iPhone */
+@media (max-width: 480px) {
+    .mobile-btn {
+        width: 65px;
+        height: 65px;
+        font-size: 28px;
+    }
+    
+    .mobile-btn.shoot-btn {
+        width: 75px;
+        height: 75px;
+        font-size: 32px;
+    }
+}
+
+.mobile-btn:active, .mobile-btn.active {
+    background-color: rgba(0, 255, 0, 0.6);
+    box-shadow:
+        0 2px 10px rgba(0, 255, 0, 0.7),
+        inset 0 0 15px rgba(0, 255, 0, 0.5);
+    transform: scale(0.95);
+}
+
+.mobile-btn.shoot-btn {
+    width: 80px;
+    height: 80px;
+    background-color: rgba(255, 0, 0, 0.3);
+    border-color: #ff6666;
+    color: #ffffaa;
+    font-size: 36px;
+}
+
+/* iPhone X and later safe areas */
+@supports (padding-top: env(safe-area-inset-top)) {
+    #mobile-controls {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .control-row {
+        margin-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Optimized shoot button size for iPhone */
+@media (max-width: 480px) {
+    .mobile-btn.shoot-btn {
+        width: 75px;
+        height: 75px;
+        font-size: 32px;
+    }
+}
+
+.mobile-btn.shoot-btn:active, .mobile-btn.shoot-btn.active {
+    background-color: rgba(255, 0, 0, 0.6);
+    box-shadow:
+        0 2px 10px rgba(255, 0, 0, 0.7),
+        inset 0 0 15px rgba(255, 0, 0, 0.5);
+}
+
+.desktop-hint {
+    display: block;
+    margin-bottom: 15px;
+}
+
+.mobile-hint {
+    display: none;
+    color: #ffff00;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+/* Hide desktop hint on small screens */
+@media (max-width: 768px) {
+    .desktop-hint {
+        display: none;
+    }
+    
+    .mobile-hint {
+        display: block;
+    }
+}
+
 /* Retro glow animation for buttons */
 @keyframes buttonGlow {
     0% { box-shadow: 0 0 15px rgba(0, 255, 0, 0.6); }

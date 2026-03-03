@@ -20,16 +20,14 @@ const finalScoreElement = document.getElementById('finalScore');
 const startBtn = document.getElementById('startBtn');
 const restartBtn = document.getElementById('restartBtn');
 
-// Input handling
+// Input handling - track both cases for z/x to handle Caps Lock or Shift
 const keys = {
     ArrowUp: false,
     ArrowDown: false,
     ArrowLeft: false,
     ArrowRight: false,
     z: false,
-    Z: false,
-    x: false,
-    X: false
+    x: false
 };
 
 // Game objects
@@ -100,8 +98,9 @@ class Player {
             this.velocityX *= 0.8; // Friction
         }
 
-        // Jumping
-        if (keys.z && this.onGround) {
+        // Check for jump key (handle both Caps Lock and Shift)
+        const zPressed = keys.z;
+        if (zPressed && this.onGround) {
             this.velocityY = -this.jumpForce;
             this.onGround = false;
         }
@@ -147,7 +146,7 @@ class Player {
         }
 
         // Shooting
-        if (keys.x && this.shootCooldown <= 0) {
+        if ((keys.x || keys.X) && this.shootCooldown <= 0) {
             this.shoot();
             this.shootCooldown = 15; // Frames between shots
         }

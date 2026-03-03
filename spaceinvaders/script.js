@@ -10,12 +10,22 @@ const restartButton = document.getElementById('restart-button');
 const startScreen = document.getElementById('start-screen');
 const startButton = document.getElementById('start-button');
 
+// Keyboard input state
+const keys = {};
+
 // Game state
 let gameRunning = false;
 let score = 0;
 let highScore = localStorage.getItem('spaceinvaders_highscore') || 0;
 let lives = 3;
 let player;
+
+// Input state
+let touchControls = {
+    left: false,
+    right: false,
+    shoot: false
+};
 
 // Initialize high score display
 highScoreElement.textContent = `HIGH SCORE: ${highScore}`;
@@ -24,7 +34,6 @@ let bullets = [];
 let alienBullets = [];
 let particles = [];
 let stars = [];
-let keys = {};
 let alienDirection = 1;
 let alienMoveDown = false;
 let lastTime = 0;
@@ -37,6 +46,217 @@ let gameSpeedMultiplier = 1;
 
 // Update high score display on load
 highScoreElement.textContent = `HIGH SCORE: ${highScore}`;
+
+// Mobile controls setup
+const moveLeftBtn = document.getElementById('move-left');
+const moveRightBtn = document.getElementById('move-right');
+const shootBtn = document.getElementById('shoot');
+
+// Touch controls state
+let isTouchDevice = false;
+
+// iOS specific detection
+function detectiOS() {
+    return [
+        'iPad Simulator',
+        'iPhone Simulator',
+        'iPod Simulator',
+        'iPad',
+        'iPhone',
+        'iPod'
+    ].includes(navigator.platform)
+    || (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
+}
+
+// Prevent context menu on long press (iOS)
+document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+});
+
+// Add touch listeners for detection (on document to catch early touches)
+document.addEventListener('touchstart', () => {
+    if (!isTouchDevice) {
+        isTouchDevice = true;
+        const container = document.getElementById('game-container');
+        if (container) {
+            container.classList.add('has-controls');
+        }
+    }
+}, { passive: false, once: true });
+
+document.addEventListener('touchmove', () => {
+    if (!isTouchDevice) {
+        isTouchDevice = true;
+        const container = document.getElementById('game-container');
+        if (container) {
+            container.classList.add('has-controls');
+        }
+    }
+}, { passive: false, once: true });
+
+// Check for touch capability via window matchMedia for better detection
+if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+    isTouchDevice = true;
+    const container = document.getElementById('game-container');
+    if (container) {
+        container.classList.add('has-controls');
+    }
+}
+
+// Show mobile controls when game starts
+function showMobileControls() {
+    const container = document.getElementById('game-container');
+    if (container) {
+        container.classList.add('has-controls');
+    }
+}
+
+// Setup touch button with proper iOS support
+function setupTouchButton(btn, controlName) {
+    if (!btn) return;
+
+    let touchId = null; // Track specific touch for this button
+    let isTouching = false;
+
+    const handleStart = (e) => {
+        // If this isn't a touch event, use mouse
+        if (!e.changedTouches || e.changedTouches.length === 0) {
+            // Mouse event - only process on non-touch devices
+            if (!isTouchDevice) {
+                e.preventDefault();
+                // Don't set touchControls on desktop - only handle button click visually
+                btn.classList.add('active');
+            }
+            return;
+        }
+
+        // Touch event - set touchControls for actual touch devices
+        e.preventDefault();
+
+        // Track specific touch point
+        const touch = e.changedTouches[0];
+        if (touchId === null) {
+            touchId = touch.identifier;
+            isTouching = true;
+            touchControls[controlName] = true;
+            btn.classList.add('active');
+        }
+    };
+
+    const handleMove = (e) => {
+        if (!isTouching || !e.changedTouches || e.changedTouches.length === 0) return;
+        
+        // Find our tracked touch
+        const touch = Array.from(e.changedTouches).find(t => t.identifier === touchId);
+        if (!touch) return;
+        
+        e.preventDefault();
+        
+        const rect = btn.getBoundingClientRect();
+
+        // Check if finger is still over the button
+        const isOver = touch.clientX >= rect.left &&
+                       touch.clientX <= rect.right &&
+                       touch.clientY >= rect.top &&
+                       touch.clientY <= rect.bottom;
+
+        if (!isOver && isTouching) {
+            // Finger moved off button
+            touchControls[controlName] = false;
+            btn.classList.remove('active');
+        }
+        
+        if (isOver && isTouching) {
+            // Still on button, auto-shoot for shoot control
+            if (controlName === 'shoot' && gameRunning && player) {
+                if (player.cooldown <= 0) {
+                    player.shoot();
+                }
+            }
+        }
+    };
+
+    const handleEnd = (e) => {
+        if (!e.changedTouches || e.changedTouches.length === 0) {
+            // Mouse event
+            if (!isTouchDevice) {
+                e.preventDefault();
+                touchControls[controlName] = false;
+                btn.classList.remove('active');
+            }
+            return;
+        }
+
+        // Touch event - check if our tracked touch ended
+        const touch = Array.from(e.changedTouches).find(t => t.identifier === touchId);
+        if (!touch) return;
+
+        e.preventDefault();
+        
+        // Only reset if this is the same touch that started it
+        touchControls[controlName] = false;
+        btn.classList.remove('active');
+        
+        // Reset tracked touch
+        if (touchId === touch.identifier) {
+            touchId = null;
+            isTouching = false;
+        }
+    };
+
+    // Touch start
+    btn.addEventListener('touchstart', handleStart, { passive: false });
+
+    // Touch move on document to catch when finger moves outside button
+    btn.addEventListener('touchmove', handleMove, { passive: false });
+
+    // Touch end
+    btn.addEventListener('touchend', handleEnd);
+
+    // Touch cancel (e.g., finger slides off screen)
+    btn.addEventListener('touchcancel', handleEnd);
+
+    // Mouse events for desktop testing (only if not touch device)
+    btn.addEventListener('mousedown', (e) => {
+        // Prevent default only for non-touch devices to avoid issues
+        if (!isTouchDevice) {
+            e.preventDefault();
+            handleStart(e);
+        }
+    });
+
+    btn.addEventListener('mouseup', (e) => {
+        if (!isTouchDevice) {
+            e.preventDefault();
+            handleEnd(e);
+        }
+    });
+
+    btn.addEventListener('mouseleave', (e) => {
+        if (!isTouchDevice) {
+            e.preventDefault();
+            touchControls[controlName] = false;
+            btn.classList.remove('active');
+        }
+    });
+}
+
+// Setup mobile control buttons
+setupTouchButton(moveLeftBtn, 'left');
+setupTouchButton(moveRightBtn, 'right');
+setupTouchButton(shootBtn, 'shoot');
+
+// Also update shoot button with click for desktop
+if (shootBtn) {
+    shootBtn.addEventListener('click', (e) => {
+        if (gameRunning && player) {
+            player.shoot();
+            e.preventDefault();
+        }
+    });
+}
+
+// Keyboard controls
 
 // Enhanced retro color palette with CRT glow effects
 const COLORS = {
@@ -493,6 +713,7 @@ class Player {
     }
 
     update() {
+        // Keyboard controls
         if (keys['ArrowLeft'] && this.x > 10) {
             this.x -= this.speed;
         }
@@ -500,8 +721,32 @@ class Player {
             this.x += this.speed;
         }
 
+        // Touch controls (override keyboard if active)
+        if (touchControls.left) {
+            this.x -= this.speed;
+            // Prevent moving off left edge
+            if (this.x < 10) this.x = 10;
+        }
+        if (touchControls.right) {
+            this.x += this.speed;
+            // Prevent moving off right edge
+            if (this.x > canvas.width - this.width - 10) {
+                this.x = canvas.width - this.width - 10;
+            }
+        }
+
         if (this.cooldown > 0) {
             this.cooldown--;
+        }
+
+        // Auto-shoot when touch shoot control is held
+        if (touchControls.shoot && gameRunning && this.cooldown <= 0) {
+            this.shoot();
+        }
+
+        // Auto-shoot when spacebar is held
+        if (keys[' '] && gameRunning && this.cooldown <= 0) {
+            this.shoot();
         }
     }
 
@@ -1153,6 +1398,15 @@ function gameOver() {
 function startGame() {
     startScreen.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
+
+    // Show mobile controls on touch devices
+    showMobileControls();
+
+    // Reset touch controls state
+    touchControls.left = false;
+    touchControls.right = false;
+    touchControls.shoot = false;
+
     initGame();
     gameRunning = true;
 
@@ -1220,8 +1474,8 @@ function initGame() {
 document.addEventListener('keydown', (e) => {
     keys[e.key] = true;
 
-    // Spacebar to shoot
-    if (e.key === ' ' && gameRunning) {
+    // Spacebar to shoot (only on initial keydown, not repeats)
+    if (e.key === ' ' && gameRunning && !e.repeat) {
         player.shoot();
         e.preventDefault();
     }
@@ -1257,6 +1511,73 @@ restartButton.addEventListener('click', () => {
 });
 
 startButton.addEventListener('click', startGame);
+
+// Swipe gesture support for movement
+let touchStartX = null;
+let touchStartY = null;
+let lastTouchX = null;
+
+canvas.addEventListener('touchstart', (e) => {
+    // Prevent default to avoid browser zooming/scrolling
+    if (gameRunning) {
+        e.preventDefault();
+    }
+    
+    // Only handle if touch is on canvas (not controls)
+    if (e.target === canvas) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        lastTouchX = touchStartX;
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    if (!gameRunning || e.target !== canvas) return;
+    
+    // Prevent default to avoid scrolling/zooming while playing
+    e.preventDefault();
+    
+    const touchX = e.touches[0].clientX;
+    const touchY = e.touches[0].clientY;
+
+    // Calculate delta
+    const deltaX = touchX - (lastTouchX || touchStartX);
+    const deltaY = touchY - touchStartY;
+
+    // Check if it's primarily a horizontal swipe (more horizontal than vertical movement)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+        // Horizontal movement - move player continuously while dragging
+        if (deltaX > 10) {
+            touchControls.right = true;
+            touchControls.left = false;
+        } else if (deltaX < -10) {
+            touchControls.left = true;
+            touchControls.right = false;
+        }
+    } else if (Math.abs(deltaY) > 10 && touchStartX !== null) {
+        // Vertical movement - shoot if swiping up
+        if (deltaY < -10) {
+            touchControls.shoot = true;
+            if (player && player.cooldown <= 0) {
+                player.shoot();
+            }
+        } else {
+            touchControls.shoot = false;
+        }
+    }
+
+    lastTouchX = touchX;
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+    if (e.target === canvas && gameRunning) {
+        touchControls.left = false;
+        touchControls.right = false;
+        touchControls.shoot = false;
+        touchStartX = null;
+        lastTouchX = null;
+    }
+});
 
 // Initialize on load
 initStars();
