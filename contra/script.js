@@ -904,7 +904,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Event listeners
+// Event listeners for keyboard input
 window.addEventListener('keydown', (e) => {
     if (keys.hasOwnProperty(e.key)) {
         keys[e.key] = true;
@@ -916,6 +916,50 @@ window.addEventListener('keyup', (e) => {
         keys[e.key] = false;
     }
 });
+
+// Touch controls
+const touchControls = {
+    ArrowUp: document.querySelector('.dpad-up'),
+    ArrowDown: document.querySelector('.dpad-down'),
+    ArrowLeft: document.querySelector('.dpad-left'),
+    ArrowRight: document.querySelector('.dpad-right'),
+    z: document.getElementById('jumpBtn'),
+    x: document.getElementById('shootBtn')
+};
+
+function setupTouchControl(key, element) {
+    if (!element) return;
+
+    const handleStart = (e) => {
+        e.preventDefault();
+        keys[key] = true;
+        element.classList.add('active');
+    };
+
+    const handleEnd = (e) => {
+        e.preventDefault();
+        keys[key] = false;
+        element.classList.remove('active');
+    };
+
+    element.addEventListener('touchstart', handleStart, { passive: false });
+    element.addEventListener('touchend', handleEnd);
+    element.addEventListener('mousedown', handleStart);
+    element.addEventListener('mouseup', handleEnd);
+    element.addEventListener('mouseleave', handleEnd);
+}
+
+// Setup touch controls for each key
+Object.keys(touchControls).forEach(key => {
+    setupTouchControl(key, touchControls[key]);
+});
+
+// Prevent default touch behaviors on the entire document
+document.addEventListener('touchmove', (e) => {
+    if (gameRunning) {
+        e.preventDefault();
+    }
+}, { passive: false });
 
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);

@@ -375,17 +375,179 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Handle keyboard input
+// Input state
+let keys = {};
+
+// Handle keyboard down events
 document.addEventListener('keydown', (e) => {
     if (!gameRunning) return;
+    
+    keys[e.key] = true;
+});
 
+// Handle keyboard up events
+document.addEventListener('keyup', (e) => {
+    keys[e.key] = false;
+});
+
+// Touch controls state
+let touchControls = {
+    left: false,
+    right: false,
+    jump: false
+};
+
+// Setup touch button with proper iOS support
+function setupTouchButton(btn, controlName) {
+    if (!btn) return;
+
+    let touchId = null; // Track specific touch for this button
+    let isTouching = false;
+
+    const handleStart = (e) => {
+        // If this isn't a touch event, use mouse
+        if (!e.changedTouches || e.changedTouches.length === 0) {
+            // Mouse event - only process on non-touch devices
+            if (!isTouchDevice) {
+                e.preventDefault();
+                btn.classList.add('active');
+            }
+            return;
+        }
+
+        // Touch event
+        e.preventDefault();
+
+        // Track specific touch point
+        const touch = e.changedTouches[0];
+        if (touchId === null) {
+            touchId = touch.identifier;
+            isTouching = true;
+            touchControls[controlName] = true;
+            btn.classList.add('active');
+        }
+    };
+
+    const handleMove = (e) => {
+        if (!isTouching || !e.changedTouches || e.changedTouches.length === 0) return;
+
+        // Find our tracked touch
+        const touch = Array.from(e.changedTouches).find(t => t.identifier === touchId);
+        if (!touch) return;
+
+        e.preventDefault();
+
+        const rect = btn.getBoundingClientRect();
+
+        // Check if finger is still over the button
+        const isOver = touch.clientX >= rect.left &&
+                       touch.clientX <= rect.right &&
+                       touch.clientY >= rect.top &&
+                       touch.clientY <= rect.bottom;
+
+        if (!isOver && isTouching) {
+            // Finger moved off button
+            touchControls[controlName] = false;
+            btn.classList.remove('active');
+        }
+    };
+
+    const handleEnd = (e) => {
+        if (!e.changedTouches || e.changedTouches.length === 0) {
+            // Mouse event
+            if (!isTouchDevice) {
+                e.preventDefault();
+                touchControls[controlName] = false;
+                btn.classList.remove('active');
+            }
+            return;
+        }
+
+        // Touch event - check if our tracked touch ended
+        const touch = Array.from(e.changedTouches).find(t => t.identifier === touchId);
+        if (!touch) return;
+
+        e.preventDefault();
+
+        // Only reset if this is the same touch that started it
+        touchControls[controlName] = false;
+        btn.classList.remove('active');
+
+        // Reset tracked touch
+        if (touchId === touch.identifier) {
+            touchId = null;
+            isTouching = false;
+        }
+    };
+
+    // Touch start
+    btn.addEventListener('touchstart', handleStart, { passive: false });
+
+    // Touch move on document to catch when finger moves outside button
+    btn.addEventListener('touchmove', handleMove, { passive: false });
+
+    // Touch end
+    btn.addEventListener('touchend', handleEnd);
+
+    // Touch cancel (e.g., finger slides off screen)
+    btn.addEventListener('touchcancel', handleEnd);
+
+    // Mouse events for desktop testing (only if not touch device)
+    btn.addEventListener('mousedown', (e) => {
+        // Prevent default only for non-touch devices to avoid issues
+        if (!isTouchDevice) {
+            e.preventDefault();
+            handleStart(e);
+        }
+    });
+
+    btn.addEventListener('mouseup', (e) => {
+        if (!isTouchDevice) {
+            e.preventDefault();
+            handleEnd(e);
+        }
+    });
+
+    btn.addEventListener('mouseleave', (e) => {
+        if (!isTouchDevice) {
+            e.preventDefault();
+            touchControls[controlName] = false;
+            btn.classList.remove('active');
+        }
+    });
+}
+
+// Setup mobile control buttons
+setupTouchButton(document.getElementById('btn-left'), 'left');
+setupTouchButton(document.getElementById('btn-right'), 'right');
+setupTouchButton(document.getElementById('btn-jump'), 'jump');
+
+// Track if this is a touch device
+let isTouchDevice = false;
+
+// Add touch listeners for detection (on document to catch early touches)
+document.addEventListener('touchstart', () => {
+    if (!isTouchDevice) {
+        isTouchDevice = true;
+    }
+}, { passive: false, once: true });
+
+document.addEventListener('touchmove', () => {
+    if (!isTouchDevice) {
+        isTouchDevice = true;
+    }
+}, { passive: false, once: true });
+
+// Check for touch capability via window matchMedia for better detection
+if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+    isTouchDevice = true;
+}
+
+// Handle jump keys (separate handler for double jump)
+document.addEventListener('keydown', (e) => {
+    if (!gameRunning) return;
+    
     switch(e.key) {
-        case 'ArrowLeft':
-            player.x -= player.speed;
-            break;
-        case 'ArrowRight':
-            player.x += player.speed;
-            break;
         case 'ArrowUp':
             if (!player.isJumping) {
                 player.velocityY = -player.jumpForce;
@@ -407,23 +569,34 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Handle key repeat for continuous movement
-let keys = {};
-document.addEventListener('keydown', (e) => {
-    keys[e.key] = true;
-});
+// Handle jump keys for touch controls (immediate jump response)
+function handleJump() {
+    if (!gameRunning) return;
+    
+    if (!player.isJumping) {
+        player.velocityY = -player.jumpForce;
+        player.isJumping = true;
+    } else if (player.velocityY < 0) {
+        // Double jump
+        player.velocityY = -player.jumpForce * 0.8;
+    }
+}
 
-document.addEventListener('keyup', (e) => {
-    keys[e.key] = false;
-});
-
-// Add continuous movement in game loop
+// Handle movement in game loop - single unified updatePlayer function
 function updatePlayer() {
     // Handle continuous key presses for smooth movement
     if (keys['ArrowLeft']) {
         player.x -= player.speed;
     }
     if (keys['ArrowRight']) {
+        player.x += player.speed;
+    }
+
+    // Handle touch controls (override keyboard if active)
+    if (touchControls.left) {
+        player.x -= player.speed;
+    }
+    if (touchControls.right) {
         player.x += player.speed;
     }
 
@@ -463,7 +636,7 @@ function updatePlayer() {
                 isOnPlatform = true;
             }
         });
-        
+
         // If not on a platform, start falling
         if (!isOnPlatform) {
             player.isJumping = true;

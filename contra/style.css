@@ -301,3 +301,227 @@ button:focus {
     right: 5px;
     border-width: 0 2px 2px 0;
 }
+
+/* =====================
+   Touch Controls
+   ===================== */
+.touch-controls {
+    display: none;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 600px;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 20px;
+    box-sizing: border-box;
+    pointer-events: none;
+    z-index: 20;
+}
+
+/* Show touch controls on touch devices */
+@media (hover: none), (pointer: coarse) {
+    .touch-controls {
+        display: flex;
+    }
+}
+
+/* Hide touch controls on desktop */
+@media (min-width: 768px) and (hover: hover) {
+    .touch-controls {
+        display: none !important;
+    }
+}
+
+.dpad-container {
+    pointer-events: auto;
+    display: flex;
+    gap: 10px;
+}
+
+.dpad {
+    position: relative;
+    width: 140px;
+    height: 120px;
+}
+
+.dpad div {
+    position: absolute;
+    background-color: rgba(255, 51, 0, 0.3);
+    border: 2px solid rgba(255, 51, 0, 0.6);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    color: rgba(255, 51, 0, 0.8);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.1s, transform 0.05s;
+}
+
+.dpad div:active,
+.dpad div.active {
+    background-color: rgba(255, 51, 0, 0.6);
+    transform: scale(0.95);
+}
+
+.dpad-up {
+    top: 0;
+    left: 42px;
+    width: 56px;
+    height: 36px;
+}
+
+.dpad-down {
+    bottom: 0;
+    left: 42px;
+    width: 56px;
+    height: 36px;
+}
+
+.dpad-left {
+    top: 42px;
+    left: 0;
+    width: 36px;
+    height: 36px;
+}
+
+.dpad-right {
+    top: 42px;
+    right: 0;
+    width: 36px;
+    height: 36px;
+}
+
+.action-buttons {
+    pointer-events: auto;
+    display: flex;
+    gap: 20px;
+}
+
+.action-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: rgba(255, 51, 0, 0.3);
+    border: 3px solid rgba(255, 51, 0, 0.6);
+    color: rgba(255, 51, 0, 0.8);
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.1s, transform 0.05s;
+}
+
+.action-btn:active,
+.action-btn.active {
+    background-color: rgba(255, 51, 0, 0.6);
+    transform: scale(0.95);
+}
+
+.jump-btn {
+    margin-left: 20px;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
+    .game-container {
+        width: 100%;
+        min-height: 100vh;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 800 / 450;
+    }
+    
+    .touch-controls {
+        bottom: clamp(10px, 3vw, 25px);
+    }
+    
+    .dpad {
+        width: 110px;
+        height: 95px;
+    }
+    
+    .dpad-up {
+        width: 42px;
+        height: 30px;
+    }
+    
+    .dpad-down {
+        width: 42px;
+        height: 30px;
+    }
+    
+    .dpad-left {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .dpad-right {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .action-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 10px;
+    }
+    
+    .jump-btn {
+        margin-left: 15px;
+    }
+}
+
+/* iPhone 17 Pro Max specific adjustments */
+@media (min-width: 460px) and (max-width: 475px) {
+    .touch-controls {
+        padding: 0 clamp(15px, 4vw, 30px);
+    }
+    
+    .dpad {
+        width: 120px;
+        height: 100px;
+    }
+    
+    .dpad-up {
+        width: 48px;
+        height: 32px;
+    }
+    
+    .dpad-down {
+        width: 48px;
+        height: 32px;
+    }
+    
+    .dpad-left {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .dpad-right {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .action-btn {
+        width: 64px;
+        height: 64px;
+    }
+    
+    .jump-btn {
+        margin-left: clamp(12px, 3vw, 18px);
+    }
+}

@@ -2,54 +2,70 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mestery Arcade</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Courier New', monospace;
             background-color: #000;
             color: #0f0;
             margin: 0;
-            padding: 20px;
+            padding: clamp(10px, 4vw, 30px);
             text-align: center;
         }
 
         h1 {
             color: #ff0;
             text-shadow: 0 0 10px #ff0;
-            margin-bottom: 30px;
+            margin-bottom: clamp(20px, 6vw, 40px);
+            font-size: clamp(32px, 8vw, 64px);
         }
 
         .games-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: clamp(15px, 4vw, 30px);
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .game-card {
             background-color: #111;
             border: 2px solid #0f0;
-            padding: 20px;
-            width: 300px;
+            padding: clamp(15px, 3vw, 25px);
+            width: 100%;
+            max-width: clamp(300px, 85vw, 450px);
             text-align: center;
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .game-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
         }
 
         .game-card h2 {
             margin-top: 0;
             color: #0f0;
+            font-size: clamp(20px, 5vw, 32px);
         }
 
         .game-card a {
             display: block;
             color: #0f0;
             text-decoration: none;
-            font-size: 18px;
-            margin-top: 10px;
-            padding: 10px;
+            font-size: clamp(16px, 3vw, 20px);
+            margin-top: clamp(8px, 2vw, 15px);
+            padding: clamp(10px, 2.5vw, 15px);
             border: 1px solid #0f0;
             transition: all 0.3s;
+            background-color: rgba(0, 255, 0, 0.1);
         }
 
         .game-card a:hover {
@@ -59,9 +75,36 @@
         }
 
         .game-description {
-            font-size: 14px;
-            margin-top: 10px;
+            font-size: clamp(12px, 2.5vw, 16px);
+            margin-top: clamp(8px, 2vw, 15px);
             color: #aaa;
+            line-height: 1.4;
+        }
+
+        /* iPhone 17 Pro Max and large tablet optimizations */
+        @media (min-width: 460px) and (max-width: 850px) {
+            .game-card {
+                width: clamp(320px, 75vw, 480px);
+            }
+        }
+
+        /* Large desktop screens */
+        @media (min-width: 1400px) {
+            .games-container {
+                max-width: 1600px;
+            }
+            
+            h1 {
+                font-size: clamp(48px, 5vw, 72px);
+            }
+        }
+
+        /* Safe area for iPhone notch devices */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            body {
+                padding-top: max(10px, env(safe-area-inset-top));
+                padding-bottom: max(10px, env(safe-area-inset-bottom));
+            }
         }
     </style>
 </head>
@@ -74,7 +117,7 @@
             <p class="game-description">Classic arcade space shooting game</p>
             <a href="spaceinvaders/index.html">PLAY GAME</a>
         </div>
-        
+
         <div class="game-card">
             <h2>DONKEY KONG</h2>
             <p class="game-description">Classic arcade platform game</p>

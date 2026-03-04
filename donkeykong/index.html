@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Donkey Kong - Mestery Arcade</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -17,7 +17,19 @@
         <div id="game-controls">
             <p>Use Arrow Keys to move and Space to jump</p>
         </div>
+
+        <!-- Touch Controls for Mobile -->
+        <div id="mobile-controls">
+            <div class="control-row">
+                <button class="d-pad" id="btn-left">←</button>
+                <button class="d-pad" id="btn-right">→</button>
+            </div>
+            <div class="control-row">
+                <button class="action-btn" id="btn-jump">JUMP</button>
+            </div>
+        </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
