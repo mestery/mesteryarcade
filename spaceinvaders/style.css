@@ -209,7 +209,7 @@ button:focus {
     display: none;
 }
 
-/* Mobile touch controls - visible during gameplay */
+/* Mobile touch controls - visible during gameplay on touch devices */
 #mobile-controls {
     position: absolute;
     bottom: 10px;
@@ -226,14 +226,17 @@ button:focus {
     box-sizing: border-box;
 }
 
-#game-container.has-controls #mobile-controls {
-    display: flex !important;
-}
-
-/* Show mobile controls on touch devices by default (with media query) */
+/* Show mobile controls for touch devices or small screens */
 @media (hover: none) and (pointer: coarse), (max-width: 768px) {
     #game-container.has-controls #mobile-controls {
         display: flex !important;
+    }
+}
+
+/* Hide mobile controls on desktop (non-touch) devices with mouse/pointer */
+@media (hover: hover) and (pointer: fine) {
+    #mobile-controls {
+        display: none !important;
     }
 }
 
