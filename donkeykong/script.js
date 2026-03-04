@@ -309,18 +309,36 @@ function checkCollisions() {
             barrels = barrels.filter(b => b !== barrel);
         }
     });
-    
-    // Player vs Donkey Kong collision
+
+    //
+    // Player vs Donkey Kong collision - must land on top to win
     if (player.x < donkeyKong.x + donkeyKong.width &&
         player.x + player.width > donkeyKong.x &&
         player.y < donkeyKong.y + donkeyKong.height &&
         player.y + player.height > donkeyKong.y) {
-        // Player wins by reaching Donkey Kong
-        score += 100;
-        updateGameInfo();
-        // Reset player position
-        player.x = 50;
-        player.y = 400;
+
+        // Only win if landing on top (player is falling and above the Donkey)
+        const hitFromTop = player.y + player.height - donkeyKong.y <= 10 &&
+                           player.velocityY > 0;
+
+        if (hitFromTop) {
+            // Player wins by reaching Donkey Kong
+            score += 100;
+            updateGameInfo();
+            alert('You defeated Donkey Kong! Score: ' + score);
+            // Reset game
+            barrels = [];
+            player.x = 50;
+            player.y = 400;
+        } else {
+            // Hit from side/bottom - player dies
+            lives--;
+            updateGameInfo();
+            if (lives <= 0) {
+                gameRunning = false;
+                alert('Game Over! Final Score: ' + score);
+            }
+        }
     }
 }
 
