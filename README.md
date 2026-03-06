@@ -29,10 +29,10 @@ docker run -d -p 8080:80 --name mestery-arcade mestery-arcade
   - `index.html` - Donkey Kong game HTML
   - `script.js` - Donkey Kong game JavaScript
   - `style.css` - Donkey Kong game CSS
-- `mrspacman/` - Directory containing the Mr. Pacman game
-  - `index.html` - Mr. Pacman game HTML
-  - `script.js` - Mr. Pacman game JavaScript
-  - `style.css` - Mr. Pacman game CSS
+- `mrspacman/` - Directory containing the Mrs. Pacman game
+  - `index.html` - Mrs. Pacman game HTML
+  - `script.js` - Mrs. Pacman game JavaScript
+  - `style.css` - Mrs. Pacman game CSS
 
 ## Game Development Guidelines
 1. Follow modern web development practices

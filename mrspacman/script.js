@@ -20,8 +20,7 @@ let powerModeEndTime = 0;
 
 // Define maze layout (1 = wall, 0 = path)
 const mazeLayout = [
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1],
     [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -33,6 +32,10 @@ const mazeLayout = [
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -281,14 +284,17 @@ function isValidPosition(x, y) {
     // Convert to grid coordinates
     const col = Math.floor(x / cellSize);
     const row = Math.floor(y / cellSize);
-    
-    // Check bounds
-    if (row < 0 || row >= rows || col < 0 || col >= cols) {
-        return false;
+
+    // Check horizontal bounds - allow wrapping
+    if (col < 0 || col >= cols) {
+        return true; // Horizontal wrapping allowed
     }
-    
+
+    // Wrap row around the screen
+    const wrappedRow = (row + rows) % rows;
+
     // Check if it's a wall
-    return mazeLayout[row][col] === 0;
+    return mazeLayout[wrappedRow][col] === 0;
 }
 
 // Move PacMan with collision detection
@@ -296,7 +302,7 @@ function movePacman() {
     // Save current position
     const oldX = pacman.x;
     const oldY = pacman.y;
-    
+
     // Move in current direction
     switch(pacman.direction) {
         case 'up':
@@ -313,24 +319,24 @@ function movePacman() {
             break;
     }
 
-    // Check for collisions with walls
+    // Wrap around the screen (but keep within maze bounds)
+    if (pacman.x < -cellSize) {
+        pacman.x = canvas.width + cellSize;
+    } else if (pacman.x > canvas.width + cellSize) {
+        pacman.x = -cellSize;
+    }
+
+    if (pacman.y < -cellSize) {
+        pacman.y = canvas.height + cellSize;
+    } else if (pacman.y > canvas.height + cellSize) {
+        pacman.y = -cellSize;
+    }
+
+    // Check for collisions with walls (after potential wrap)
     if (!isValidPosition(pacman.x, pacman.y)) {
         // If collision occurs, revert to previous position
         pacman.x = oldX;
         pacman.y = oldY;
-    }
-
-    // Wrap around the screen (but keep within maze bounds)
-    if (pacman.x < pacman.radius) {
-        pacman.x = canvas.width - pacman.radius;
-    } else if (pacman.x > canvas.width - pacman.radius) {
-        pacman.x = pacman.radius;
-    }
-
-    if (pacman.y < pacman.radius) {
-        pacman.y = canvas.height - pacman.radius;
-    } else if (pacman.y > canvas.height - pacman.radius) {
-        pacman.y = pacman.radius;
     }
 }
 
@@ -399,7 +405,20 @@ function moveGhosts() {
                 break;
         }
 
-        // Check for collisions with walls
+        // Wrap around the screen (but keep within maze bounds)
+        if (ghost.x < -cellSize) {
+            ghost.x = canvas.width + cellSize;
+        } else if (ghost.x > canvas.width + cellSize) {
+            ghost.x = -cellSize;
+        }
+
+        if (ghost.y < -cellSize) {
+            ghost.y = canvas.height + cellSize;
+        } else if (ghost.y > canvas.height + cellSize) {
+            ghost.y = -cellSize;
+        }
+
+        // Check for collisions with walls (after potential wrap)
         if (!isValidPosition(ghost.x, ghost.y)) {
             // If collision occurs, revert to previous position and change direction
             ghost.x = oldX;
@@ -408,19 +427,6 @@ function moveGhosts() {
             // Change direction randomly
             const directions = ['up', 'down', 'left', 'right'];
             ghost.direction = directions[Math.floor(Math.random() * directions.length)];
-        }
-
-        // Wrap around the screen (but keep within maze bounds)
-        if (ghost.x < ghost.radius) {
-            ghost.x = canvas.width - ghost.radius;
-        } else if (ghost.x > canvas.width - ghost.radius) {
-            ghost.x = ghost.radius;
-        }
-
-        if (ghost.y < ghost.radius) {
-            ghost.y = canvas.height - ghost.radius;
-        } else if (ghost.y > canvas.height - ghost.radius) {
-            ghost.y = ghost.radius;
         }
     });
 }
