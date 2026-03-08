@@ -1,0 +1,45 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.game-container {
+    position: relative;
+    border: 2px solid #0f0;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+}
+
+#gameCanvas {
+    background-color: #000;
+    display: block;
+}
+
+.game-info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 18px;
+    color: #0f0;
+}
+
+.game-controls {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 14px;
+    color: #0f0;
+}
+
+/* Retro-style text effects */
+.game-info div,
+.game-controls p {
+    text-shadow: 0 0 5px #0f0;
+}

@@ -33,6 +33,10 @@ docker run -d -p 8080:80 --name mestery-arcade mestery-arcade
   - `index.html` - Mrs. Pacman game HTML
   - `script.js` - Mrs. Pacman game JavaScript
   - `style.css` - Mrs. Pacman game CSS
+- `asteroids/` - Directory containing the Asteroids game
+  - `index.html` - Asteroids game HTML
+  - `script.js` - Asteroids game JavaScript
+  - `style.css` - Asteroids game CSS
 
 ## Game Development Guidelines
 1. Follow modern web development practices
