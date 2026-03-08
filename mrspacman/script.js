@@ -20,7 +20,8 @@ let powerModeEndTime = 0;
 
 // Define maze layout (1 = wall, 0 = path)
 const mazeLayout = [
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1],
     [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -32,8 +33,6 @@ const mazeLayout = [
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1],
@@ -158,11 +157,11 @@ function drawMaze() {
 function drawPacman() {
     ctx.beginPath();
     ctx.arc(pacman.x, pacman.y, pacman.radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#FFD700';
+    ctx.fillStyle = '#FFD700'; // Bright yellow for better visibility
     ctx.fill();
     ctx.closePath();
 
-    // Draw mouth
+    // Draw mouth with high contrast
     ctx.beginPath();
     let startAngle, endAngle;
     switch(pacman.direction) {
@@ -186,7 +185,11 @@ function drawPacman() {
     ctx.arc(pacman.x, pacman.y, pacman.radius, startAngle, endAngle);
     ctx.lineTo(pacman.x, pacman.y);
     ctx.fillStyle = '#000';
+    // Add a slight glow effect to make the mouth more visible
+    ctx.shadowColor = '#FFD700';
+    ctx.shadowBlur = 5;
     ctx.fill();
+    ctx.shadowBlur = 0; // Reset shadow
 }
 
 // Draw ghosts
