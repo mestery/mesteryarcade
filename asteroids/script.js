@@ -26,7 +26,7 @@ for (let i = 0; i < 12; i++) {
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         size: 150 + Math.random() * 200,
-        color: `hsl(${Math.random() * 360}, 80%, ${15 + Math.random() * 20}%)`,
+        hsl: [Math.floor(Math.random() * 360), 80, 15 + Math.random() * 20],
         opacity: 0.04 + Math.random() * 0.08,
         rotationSpeed: (Math.random() - 0.5) * 0.003,
         rotation: Math.random() * Math.PI,
@@ -43,7 +43,7 @@ for (let i = 0; i < 250; i++) {
         size: Math.random() * 2.5,
         brightness: Math.random(),
         twinkleSpeed: 0.03 + Math.random() * 0.05,
-        colorHue: Math.floor(Math.random() * 60 + 180), // Cyan to violet range
+        hue: Math.floor(Math.random() * 60 + 180), // Cyan to violet range
         speed: Math.random() * 0.3 // Parallax speed
     });
 }
@@ -105,6 +105,9 @@ function createAsteroids(count) {
             color: '#d4d4d4',
             vertices: vertices
         };
+
+        // Calculate and store asteroid colors for performance
+        updateAsteroidColors(asteroid);
 
         // Make sure asteroids don't spawn on top of the ship
         const distance = Math.sqrt(
@@ -565,7 +568,7 @@ function updateAsteroids() {
         asteroid.x += asteroid.velocity.x;
         asteroid.y += asteroid.velocity.y;
         asteroid.rotation += asteroid.rotationSpeed;
-        
+
         // Wrap around screen
         if (asteroid.x < -asteroid.radius) asteroid.x = canvas.width + asteroid.radius;
         if (asteroid.x > canvas.width + asteroid.radius) asteroid.x = -asteroid.radius;
@@ -574,28 +577,40 @@ function updateAsteroids() {
     });
 }
 
+// Pre-computed values for asteroid colors (stored per asteroid to avoid recalculation)
+function updateAsteroidColors(asteroid) {
+    // Determine color based on size (larger = redder, smaller = bluer)
+    const baseHue = 20 + Math.random() * 30; // Orange/Red base
+    const saturation = 70 + Math.random() * 20;
+    const lightness = 35 + Math.random() * 35;
+
+    // Size-based color variation
+    let asteroidHue = baseHue;
+    if (asteroid.radius < 20) {
+        asteroidHue = 180 + Math.random() * 60; // Blue-ish to violet for small
+    } else if (asteroid.radius < 35) {
+        asteroidHue = 20 + Math.random() * 40; // Orange-ish to red for medium
+    }
+
+    asteroid.hue = asteroidHue;
+    asteroid.saturation = saturation;
+    asteroid.lightness = lightness;
+}
+
 // Draw asteroids with enhanced graphics
 function drawAsteroids() {
     asteroids.forEach(asteroid => {
+        // Update colors if not already set (for newly created asteroids)
+        if (!asteroid.hue) {
+            updateAsteroidColors(asteroid);
+        }
+
         ctx.save();
         ctx.translate(asteroid.x, asteroid.y);
         ctx.rotate(asteroid.rotation);
 
-        // Determine color based on size (larger = redder, smaller = bluer)
-        const baseHue = 20 + Math.random() * 30; // Orange/Red base
-        const saturation = 70 + Math.random() * 20;
-        const lightness = 35 + Math.random() * 35;
-
-        // Size-based color variation
-        let asteroidHue = baseHue;
-        if (asteroid.radius < 20) {
-            asteroidHue = 180 + Math.random() * 60; // Blue-ish to violet for small
-        } else if (asteroid.radius < 35) {
-            asteroidHue = 20 + Math.random() * 40; // Orange-ish to red for medium
-        }
-
+        const { hue: asteroidHue, saturation, lightness } = asteroid;
         const mainColor = `hsl(${asteroidHue}, ${saturation}%, ${lightness}%)`;
-        const shadowColor = `hsl(${asteroidHue}, ${saturation}%, ${lightness - 15}%)`;
 
         // Outer glow with pulsing effect
         const pulse = Math.sin(Date.now() / 400) * 8 + 12;
@@ -932,131 +947,113 @@ function drawBullets() {
     });
 }
 
-// Create explosion particles
+// Create explosion particles - optimized for performance
 function createExplosion(x, y, color) {
-    // Main debris particles - brighter and more varied
-    const debrisCount = 50;
+    // Reduced particle count for better performance
+    const debrisCount = 20;
     for (let i = 0; i < debrisCount; i++) {
         particles.push({
             x: x,
             y: y,
-            vx: (Math.random() - 0.5) * 22,
-            vy: (Math.random() - 0.5) * 22,
+            vx: (Math.random() - 0.5) * 12,
+            vy: (Math.random() - 0.5) * 12,
             life: 1.0,
-            color: color || `hsl(${Math.random() * 60}, ${85 + Math.random() * 20}%, ${45 + Math.random() * 30}%)`,
-            size: 2 + Math.random() * 5,
+            color: color || Math.floor(Math.random() * 60),
+            size: 2 + Math.random() * 3,
             type: 'debris',
             decay: 0.96 + Math.random() * 0.03
         });
     }
 
-    // Spark particles - more numerous and brighter with color variety
-    const sparkCount = 35;
+    // Reduced spark count
+    const sparkCount = 15;
     for (let i = 0; i < sparkCount; i++) {
-        // Color variety: cyan, magenta, yellow, white
         let hue;
         const sparkType = Math.random();
-        if (sparkType < 0.35) hue = 180 + Math.random() * 60; // Cyan
-        else if (sparkType < 0.65) hue = 300 + Math.random() * 40; // Magenta
-        else if (sparkType < 0.85) hue = 40 + Math.random() * 20; // Yellow
-        else hue = 0 + Math.random() * 10; // White/Red
+        if (sparkType < 0.35) hue = 180;
+        else if (sparkType < 0.65) hue = 300;
+        else if (sparkType < 0.85) hue = 40;
+        else hue = 0;
 
         particles.push({
             x: x,
             y: y,
-            vx: (Math.random() - 0.5) * 32,
-            vy: (Math.random() - 0.5) * 32,
+            vx: (Math.random() - 0.5) * 18,
+            vy: (Math.random() - 0.5) * 18,
             life: 1.0,
-            color: `hsl(${hue}, ${95 + Math.random() * 10}%, ${70 + Math.random() * 25}%)`,
-            size: 1 + Math.random() * 4,
-            type: 'spark',
-            trailLength: 3 + Math.random() * 5
+            color: hue,
+            size: 1 + Math.random() * 3,
+            type: 'spark'
         });
     }
 
-    // Glowing fire particles - enhanced with more variety and intensity
-    const fireCount = 45;
+    // Reduced fire count
+    const fireCount = 20;
     for (let i = 0; i < fireCount; i++) {
-        // Mix of colors: orange, yellow, red, magenta, cyan
         let hue;
         const fireType = Math.random();
-        if (fireType < 0.25) hue = Math.random() * 30; // Orange/Red
-        else if (fireType < 0.55) hue = 45 + Math.random() * 25; // Yellow
-        else if (fireType < 0.75) hue = 280 + Math.random() * 35; // Magenta/Purple
-        else if (fireType < 0.9) hue = 180 + Math.random() * 40; // Cyan
-        else hue = 200 + Math.random() * 40; // Blue-ish
+        if (fireType < 0.35) hue = 15;
+        else if (fireType < 0.65) hue = 45;
+        else if (fireType < 0.85) hue = 280;
+        else hue = 180;
 
         particles.push({
             x: x,
             y: y,
-            vx: (Math.random() - 0.5) * 14,
-            vy: (Math.random() - 0.5) * 14,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
             life: 1.0,
-            color: `hsl(${hue}, ${95 + Math.random() * 10}%, ${60 + Math.random() * 30}%)`,
-            size: 4 + Math.random() * 7,
-            type: 'fire',
-            pulseSpeed: 0.5 + Math.random() * 1.5
+            color: hue,
+            size: 3 + Math.random() * 4,
+            type: 'fire'
         });
     }
 
-    // Add expanding shockwave ring with enhanced colors
+    // Single shockwave ring (simplified)
     particles.push({
         x: x,
         y: y,
         radius: 5,
-        maxRadius: Math.max(canvas.width, canvas.height) * 0.35,
+        maxRadius: Math.max(canvas.width, canvas.height) * 0.25,
         life: 1.0,
-        color: `hsl(${Math.random() * 60 + 20}, ${100}, ${50 + Math.random() * 30}%)`, // Orange to cyan
-        type: 'shockwave',
-        rotationSpeed: (Math.random() - 0.5) * 0.1
+        color: 30,
+        type: 'shockwave'
     });
 
-    // Add secondary ring
-    particles.push({
-        x: x,
-        y: y,
-        radius: 15,
-        maxRadius: Math.max(canvas.width, canvas.height) * 0.45,
-        life: 1.0,
-        color: `hsl(${Math.random() * 60 + 180}, ${90}, ${70 + Math.random() * 20}%)`, // Cyan to violet
-        type: 'secondary_ring',
-        rotationSpeed: (Math.random() - 0.5) * 0.15
-    });
-
-    // Add starburst particles for more dramatic effect
-    const burstCount = 15;
+    // Reduced burst count
+    const burstCount = 8;
     for (let i = 0; i < burstCount; i++) {
         const angle = (i / burstCount) * Math.PI * 2;
-        const speed = 15 + Math.random() * 10;
-        
+        const speed = 8 + Math.random() * 6;
+
         particles.push({
             x: x,
             y: y,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
             life: 1.0,
-            color: `hsl(${Math.random() * 60}, ${95 + Math.random() * 10}%, ${70 + Math.random() * 25}%)`,
-            size: 1.5 + Math.random() * 3,
+            color: Math.floor(Math.random() * 60),
+            size: 1.5 + Math.random() * 2,
             type: 'burst',
             decay: 0.92 + Math.random() * 0.06
         });
     }
 }
 
-// Draw particles with enhanced graphics
+// Draw particles - optimized for performance
 function drawParticles() {
     for (let i = particles.length - 1; i >= 0; i--) {
         const particle = particles[i];
 
         particle.x += particle.vx;
         particle.y += particle.vy;
-        
+
         // Apply decay to velocity for particles that have it
         if (particle.decay) {
             particle.vx *= particle.decay;
             particle.vy *= particle.decay;
         }
-        
+
         particle.life -= 0.025;
 
         if (particle.life <= 0) {
@@ -1067,277 +1064,78 @@ function drawParticles() {
         ctx.globalAlpha = particle.life;
 
         if (particle.type === 'debris') {
-            // Rock fragment - jagged square with glow
+            // Simplified debris - reduced complexity
             const size = particle.size * particle.life;
 
-            // Color gradient based on life
-            let debrisColor;
-            if (typeof particle.color === 'string' && particle.color.startsWith('hsl')) {
-                // Parse HSL and update lightness based on particle life
-                const hslMatch = particle.color.match(/hsl\(([^,]+),\s*([^,]+%),\s*([^)]+)\)/);
-                if (hslMatch) {
-                    const hue = hslMatch[1];
-                    const saturation = hslMatch[2];
-                    const newLightness = Math.min(100, Math.round(70 * particle.life));
-                    debrisColor = `hsl(${hue}, ${saturation}, ${newLightness}%)`;
-                } else {
-                    debrisColor = '#ffffff';
-                }
-            } else {
-                debrisColor = particle.color || '#ffffff';
-            }
-
-            ctx.fillStyle = debrisColor;
-            ctx.shadowBlur = 25 * particle.life;
-            ctx.shadowColor = debrisColor;
+            ctx.fillStyle = `hsl(${particle.color}, 80%, ${70 * particle.life}%)`;
+            ctx.shadowBlur = 15 * particle.life;
+            ctx.shadowColor = ctx.fillStyle;
 
             ctx.save();
             ctx.translate(particle.x, particle.y);
 
-            // Spin faster as life decreases
-            const rotation = (1 - particle.life) * 8 + Date.now() / 100;
-            ctx.rotate(rotation);
-
-            // Draw jagged diamond shape
+            // Draw simple diamond shape
             ctx.beginPath();
             ctx.moveTo(0, -size);
             ctx.lineTo(size * 0.5, 0);
             ctx.lineTo(0, size);
             ctx.lineTo(-size * 0.5, 0);
             ctx.closePath();
-
-            // Gradient fill with glow effect
-            const debrisGradient = ctx.createRadialGradient(0, 0, size * 0.2, 0, 0, size);
-            debrisGradient.addColorStop(0, '#ffffff');
-            debrisGradient.addColorStop(0.3, debrisColor);
-            debrisGradient.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
-
-            ctx.fillStyle = debrisGradient;
             ctx.fill();
-
-            // Draw diagonal line for retro feel
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(-size * 0.3, -size);
-            ctx.lineTo(size * 0.3, size);
-            ctx.stroke();
-
-            // Draw corner glow points
-            for (let j = 0; j < 4; j++) {
-                const angle = (j * Math.PI / 2) + rotation;
-                ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + particle.life * 0.4})`;
-                ctx.shadowBlur = 15;
-                ctx.beginPath();
-                ctx.arc(
-                    Math.cos(angle) * size,
-                    Math.sin(angle) * size,
-                    1.5, 0, Math.PI * 2
-                );
-                ctx.fill();
-            }
 
             ctx.restore();
 
         } else if (particle.type === 'spark') {
-            // Bright spark - streak effect with colors
+            // Simplified spark - solid color with basic trail
             const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
             const angle = Math.atan2(particle.vy, particle.vx);
 
-            // Color gradient for spark trail
-            const hue = particle.color.match(/hsl\((\d+)/);
-            const baseHue = hue ? parseInt(hue[1]) : 60;
+            ctx.fillStyle = `hsl(${particle.color}, 100%, 75%)`;
+            ctx.shadowBlur = 20 * particle.life;
 
-            ctx.shadowBlur = 30 * particle.life;
-            ctx.shadowColor = `hsl(${baseHue}, 100%, 70%)`;
-
-            // Spark trail - thin and fast
-            ctx.strokeStyle = `hsla(${baseHue}, 100%, ${70 + particle.life * 30}%, ${particle.life})`;
-            ctx.lineWidth = particle.size;
-
-            const streakLength = speed * 3.0 + (1 - particle.life) * 25;
+            // Draw simple streak
+            const size = particle.size;
             ctx.beginPath();
-            ctx.moveTo(particle.x, particle.y);
-
-            // Add curve to spark trail for more dynamic feel
-            const midX = particle.x - Math.cos(angle) * streakLength / 2;
-            const midY = particle.y - Math.sin(angle) * streakLength / 2;
-            const endX = particle.x - Math.cos(angle) * streakLength;
-            const endY = particle.y - Math.sin(angle) * streakLength;
-
-            ctx.quadraticCurveTo(midX, midY, endX, endY);
-            ctx.stroke();
-
-            // Add glow point at tip
-            if (particle.life > 0.5) {
-                ctx.fillStyle = '#ffffff';
-                ctx.shadowBlur = 35;
-                ctx.beginPath();
-                ctx.arc(endX, endY, 2.5 * particle.life, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
+            ctx.fill();
 
         } else if (particle.type === 'fire') {
-            // Fire particle - glowing orb with pulsing effect
-            const pulse = Math.sin(Date.now() / (120 - particle.life * 60)) * 3 + 5;
-            const size = particle.size * (2.8 - particle.life);
-            
-            const gradient = ctx.createRadialGradient(particle.x, particle.y, pulse * particle.life, particle.x, particle.y, size);
+            // Simplified fire particle
+            const size = particle.size * (1.5 - particle.life);
 
-            const hue = particle.color.match(/hsl\((\d+)/);
-            const baseHue = hue ? parseInt(hue[1]) : 30;
-
-            gradient.addColorStop(0, `hsla(${baseHue}, ${100 + particle.life * 50}%, ${95 + particle.life * 10}%, ${particle.life})`);
-            gradient.addColorStop(0.25, `hsla(${baseHue}, ${100 + particle.life * 50}%, ${70 + particle.life * 20}%, ${particle.life})`);
-            gradient.addColorStop(0.5, `hsla(${baseHue}, ${100 + particle.life * 30}%, ${50 + particle.life * 25}%, ${particle.life * 0.8})`);
-            gradient.addColorStop(0.75, `hsla(${baseHue}, 100%, ${30 + particle.life * 20}%, ${particle.life * 0.4})`);
-            gradient.addColorStop(1, 'transparent');
-
-            ctx.fillStyle = gradient;
-            ctx.shadowBlur = 35 * particle.life;
-
-            // Dynamic shadow color based on fire type
-            if (baseHue < 40) {
-                ctx.shadowColor = '#ffaa00'; // Orange/Yellow
-            } else if (baseHue > 280) {
-                ctx.shadowColor = '#ff00ff'; // Magenta
-            } else if (baseHue < 120) {
-                ctx.shadowColor = '#ffff00'; // Yellow
-            } else if (baseHue < 200) {
-                ctx.shadowColor = '#00ffff'; // Cyan
-            } else {
-                ctx.shadowColor = `hsl(${baseHue}, 100%, 70%)`;
-            }
+            ctx.fillStyle = `hsl(${particle.color}, 90%, ${60 + particle.life * 30}%)`;
+            ctx.shadowBlur = 25 * particle.life;
+            ctx.shadowColor = ctx.fillStyle;
 
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
             ctx.fill();
 
-            // Add inner bright core
-            if (particle.life > 0.3) {
-                ctx.fillStyle = '#ffffff';
-                ctx.shadowBlur = 45;
-                const coreSize = size * 0.35 * particle.life;
-                ctx.beginPath();
-                ctx.arc(particle.x, particle.y, coreSize, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
         } else if (particle.type === 'shockwave') {
-            // Shockwave ring - expanding circle with rotation
-            particle.radius += (12 + Math.random() * 8) * particle.life;
+            // Simplified shockwave ring
+            particle.radius += (8 + Math.random() * 4) * particle.life;
 
-            // Guard against non-finite values
             if (!isFinite(particle.x) || !isFinite(particle.y) || !isFinite(particle.radius)) {
                 particles.splice(i, 1);
                 continue;
             }
 
-            ctx.shadowBlur = 35 * particle.life;
-            
-            // Parse color and apply life
-            let shockColor = particle.color.match(/hsl\(([^)]+)\)/);
-            if (shockColor) {
-                ctx.strokeStyle = `hsl(${shockColor[1]}, 100%, ${50 + particle.life * 30}%)`;
-                ctx.fillStyle = `hsla(0, 100%, ${50 + Math.random() * 30}%, ${particle.life})`;
-            } else {
-                ctx.strokeStyle = `rgba(255, 100, 0, ${particle.life})`;
-                ctx.fillStyle = `rgba(255, 100, 0, ${particle.life})`;
-            }
-            
-            ctx.lineWidth = 5 * particle.life;
+            ctx.strokeStyle = `hsl(${particle.color}, 100%, ${50 + particle.life * 30}%)`;
+            ctx.lineWidth = 4 * particle.life;
 
-            // Create expanding ring effect
-            const innerRadius = Math.max(0.1, particle.radius * 0.75);
-            const outerRadius = Math.max(0.1, particle.radius);
-            const ringGradient = ctx.createRadialGradient(particle.x, particle.y, innerRadius, particle.x, particle.y, outerRadius);
-            ringGradient.addColorStop(0, 'transparent');
-            ringGradient.addColorStop(0.4, `rgba(255, 150, 50, ${particle.life * 0.6})`);
-            ringGradient.addColorStop(1, 'transparent');
-
-            ctx.fillStyle = ringGradient;
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Outer ring line with glow
-            ctx.shadowBlur = 40 * particle.life;
-            ctx.strokeStyle = `rgba(255, 180, 50, ${particle.life})`;
-            ctx.beginPath();
-            ctx.arc(particle.x, particle.y, particle.radius * 0.95, 0, Math.PI * 2);
-            ctx.stroke();
-
-        } else if (particle.type === 'secondary_ring') {
-            // Secondary expanding ring with different color
-            particle.radius += (15 + Math.random() * 10) * particle.life;
-
-            ctx.shadowBlur = 30 * particle.life;
-            
-            // Parse color and apply life
-            let ringColor = particle.color.match(/hsl\(([^)]+)\)/);
-            if (ringColor) {
-                ctx.strokeStyle = `hsl(${ringColor[1]}, 90%, ${70 + particle.life * 30}%)`;
-            } else {
-                ctx.strokeStyle = `rgba(0, 180, 255, ${particle.life})`;
-            }
-            
-            ctx.lineWidth = 3 * particle.life;
-
-            // Guard against non-finite values
-            if (!isFinite(particle.x) || !isFinite(particle.y) || !isFinite(particle.radius)) {
-                particles.splice(i, 1);
-                continue;
-            }
-
-            // Create ring with gradient
-            const innerRadius = Math.max(0.1, particle.radius * 0.8);
-            const outerRadius = Math.max(0.1, particle.radius);
-            const ringGradient = ctx.createRadialGradient(particle.x, particle.y, innerRadius, particle.x, particle.y, outerRadius);
-            ringGradient.addColorStop(0, 'transparent');
-            ringGradient.addColorStop(0.5, `rgba(150, 200, 255, ${particle.life * 0.5})`);
-            ringGradient.addColorStop(1, 'transparent');
-
-            ctx.fillStyle = ringGradient;
-            ctx.beginPath();
-            ctx.arc(particle.x, particle.y, outerRadius, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Outer ring line
-            ctx.strokeStyle = `rgba(170, 220, 255, ${particle.life})`;
-            ctx.shadowBlur = 25 * particle.life;
-            const outerRingRadius = Math.max(0.1, outerRadius * 0.92);
-            ctx.beginPath();
-            ctx.arc(particle.x, particle.y, outerRingRadius, 0, Math.PI * 2);
             ctx.stroke();
 
         } else if (particle.type === 'burst') {
-            // Starburst particle - fast moving streak
-            ctx.shadowBlur = 25 * particle.life;
-            
-            let burstColor = particle.color.match(/hsl\(([^)]+)\)/);
-            if (burstColor) {
-                ctx.fillStyle = `hsla(${burstColor[1]}, 95%, ${70 + particle.life * 25}%, ${particle.life})`;
-                ctx.shadowColor = `hsl(${burstColor[1]}, 100%, ${70}%)`;
-            } else {
-                ctx.fillStyle = `rgba(255, 100, 0, ${particle.life})`;
-            }
-            
-            // Draw streak
+            // Simplified burst particle
+            ctx.fillStyle = `hsl(${particle.color}, 90%, ${70 + particle.life * 25}%)`;
+            ctx.shadowBlur = 15 * particle.life;
+
             const size = particle.size * particle.life;
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
             ctx.fill();
-
-            // Add small sparks
-            if (Math.random() > 0.7) {
-                ctx.fillStyle = '#ffffff';
-                ctx.shadowBlur = 20;
-                const sparkX = particle.x + (Math.random() - 0.5) * 15;
-                const sparkY = particle.y + (Math.random() - 0.5) * 15;
-                ctx.beginPath();
-                ctx.arc(sparkX, sparkY, 2 * particle.life, 0, Math.PI * 2);
-                ctx.fill();
-            }
         }
     }
 
@@ -1352,7 +1150,7 @@ function drawBackground() {
     stars.forEach(star => {
         star.x += star.speed;
         star.y += star.speed * 0.5; // Slight vertical component for depth
-        
+
         // Wrap around screen
         if (star.x < 0) star.x = canvas.width;
         if (star.x > canvas.width) star.x = 0;
@@ -1360,7 +1158,7 @@ function drawBackground() {
         if (star.y > canvas.height) star.y = 0;
     });
 
-    // Enhanced nebulas with pulsing effect and rotation
+    // Draw nebulas (pre-computed HSL values to avoid string parsing)
     nebulas.forEach(nebula => {
         nebula.rotation += nebula.rotationSpeed;
 
@@ -1371,46 +1169,25 @@ function drawBackground() {
         ctx.translate(nebula.x, nebula.y);
         ctx.rotate(nebula.rotation);
 
-        // Create gradient for nebula with glow
+        // Create gradient with pre-computed HSL values (no string parsing)
         const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, nebula.size);
+        const [hue, sat, light] = nebula.hsl;
 
-        // Parse original color
-        let baseColor = nebula.color;
-        if (baseColor.includes('hsl')) {
-            // Extract HSL components and add pulse effect
-            const hueMatch = baseColor.match(/hsl\((\d+), (\d+)%, (\d+)%/);
-            if (hueMatch) {
-                const hue = hueMatch[1];
-                const sat = hueMatch[2];
-                const light = hueMatch[3];
-                baseColor = `hsl(${hue}, ${sat}%, ${light}%)`;
-            }
-        }
-
-        // Create gradient with pulse
-        const color = baseColor.replace('%)', '%, ' + pulse + ')');
-        gradient.addColorStop(0, baseColor.replace('%)', '%, ' + (pulse * 1.5) + ')'));
-        gradient.addColorStop(0.2, baseColor.replace('%)', '%, ' + (pulse * 1.2) + ')'));
-        gradient.addColorStop(0.5, baseColor.replace('%)', '%, ' + pulse + ')'));
+        gradient.addColorStop(0, `hsla(${hue}, ${sat}%, ${light}%, ${pulse * 1.5})`);
+        gradient.addColorStop(0.2, `hsla(${hue}, ${sat}%, ${light}%, ${pulse * 1.2})`);
+        gradient.addColorStop(0.5, `hsla(${hue}, ${sat}%, ${light}%, ${pulse})`);
         gradient.addColorStop(1, 'transparent');
 
         ctx.fillStyle = gradient;
-
-        // Add glow effect
         ctx.shadowBlur = 50 * pulse;
-        if (nebula.color.includes('hsl')) {
-            ctx.shadowColor = nebula.color.replace('%)', '%, ' + pulse + ')');
-        } else {
-            ctx.shadowColor = nebula.color;
-        }
-
+        ctx.shadowColor = `hsla(${hue}, ${sat}%, ${light}%, ${pulse})`;
         ctx.beginPath();
         ctx.arc(0, 0, nebula.size, 0, Math.PI * 2);
         ctx.fill();
 
         // Add secondary ring for extra depth
         ctx.shadowBlur = 30 * pulse;
-        ctx.strokeStyle = nebula.color.replace('%)', '%, ' + (pulse * 0.5) + ')');
+        ctx.strokeStyle = `hsla(${hue}, ${sat}%, ${light}%, ${pulse * 0.5})`;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(0, 0, nebula.size * 1.25, 0, Math.PI * 2);
@@ -1418,7 +1195,7 @@ function drawBackground() {
 
         // Add faint outer glow ring
         ctx.shadowBlur = 15 * pulse;
-        ctx.strokeStyle = nebula.color.replace('%)', '%, ' + (pulse * 0.2) + ')');
+        ctx.strokeStyle = `hsla(${hue}, ${sat}%, ${light}%, ${pulse * 0.2})`;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(0, 0, nebula.size * 1.5, 0, Math.PI * 2);
@@ -1427,7 +1204,7 @@ function drawBackground() {
         ctx.restore();
     });
 
-    // Enhanced stars with more variety and parallax effect
+    // Draw stars with simplified rendering
     stars.forEach(star => {
         star.brightness += star.twinkleSpeed;
         if (star.brightness > 1 || star.brightness < 0.2) {
@@ -1436,55 +1213,45 @@ function drawBackground() {
 
         const alpha = 0.3 + star.brightness;
 
-        // Colored stars for more variety - broader color range
-        const hue = star.colorHue + (Math.random() * 40 - 20);
+        // Simple color calculation (no HSL parsing needed)
+        const hue = star.hue + (Math.random() * 40 - 20);
 
-        // Glowing stars with multiple layers
-        ctx.shadowBlur = star.size * 5;
-        
-        // Calculate shadow color based on star hue
-        let shadowHue = hue;
-        if (hue > 180 && hue < 260) shadowHue = 240; // Blue stars
-        else if (hue > 310 || hue < 40) shadowHue = 25; // Orange/Red stars
-        else if (hue > 40 && hue < 120) shadowHue = 60; // Yellow stars
-        
-        ctx.shadowColor = `hsla(${shadowHue}, ${60 + Math.random() * 40}%, ${70 + Math.random() * 25}%, ${alpha})`;
-
+        // Simplified star rendering - reduce shadowBlur and gradient complexity
         ctx.fillStyle = `hsla(${hue}, ${70 + Math.random() * 30}%, ${65 + Math.random() * 25}%, ${alpha})`;
 
-        // Twinkle effect
+        // Draw simple star (reduced gradient complexity)
         const twinkleSize = star.size * (0.5 + 0.5 * Math.sin(Date.now() / (100 + star.size * 20)));
+        const glowRadius = star.size * 3;
 
-        // Draw star glow
-        const glowGradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.size * 3.5);
+        // Simplified gradient for glow
+        ctx.shadowBlur = 15; // Reduced from star.size * 5
+
+        const glowGradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, glowRadius);
         glowGradient.addColorStop(0, `hsla(${hue}, ${70 + Math.random() * 30}%, ${80 + Math.random() * 25}%, ${alpha})`);
         glowGradient.addColorStop(0.3, `hsla(${hue}, ${70 + Math.random() * 30}%, ${65 + Math.random() * 25}%, ${alpha * 0.5})`);
         glowGradient.addColorStop(1, 'transparent');
 
         ctx.fillStyle = glowGradient;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size * 3.5, 0, Math.PI * 2);
+        ctx.arc(star.x, star.y, glowRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Draw star core
-        ctx.shadowBlur = 0;
-        
-        // Core brightness with twinkle
+        // Draw star core (simplified)
         const coreAlpha = alpha * (0.7 + 0.3 * Math.sin(Date.now() / (150 + star.size * 25)));
         ctx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
-        
+        ctx.shadowBlur = 0;
+
         const finalSize = twinkleSize * (0.5 + 0.3 * Math.sin(Date.now() / (180 + star.size * 20)));
         ctx.beginPath();
         ctx.arc(star.x, star.y, finalSize, 0, Math.PI * 2);
         ctx.fill();
 
-        // Draw cross shape for bright stars
-        if (star.size > 1.8) {
-            const crossHue = hue;
-            ctx.strokeStyle = `hsla(${crossHue}, ${70 + Math.random() * 30}%, ${75 + Math.random() * 25}%, ${alpha})`;
+        // Only draw cross for very bright stars (reduce draws)
+        if (star.size > 2.5) {
+            ctx.strokeStyle = `hsla(${hue}, ${70 + Math.random() * 30}%, ${75 + Math.random() * 25}%, ${alpha})`;
             ctx.lineWidth = star.size * 0.6;
 
-            const crossSize = star.size * 3;
+            const crossSize = star.size * 2;
             ctx.beginPath();
             ctx.moveTo(star.x - crossSize, star.y);
             ctx.lineTo(star.x + crossSize, star.y);
@@ -1493,20 +1260,17 @@ function drawBackground() {
             ctx.stroke();
         }
 
-        // Draw faint comet trail for some stars
-        if (Math.random() > 0.98) {
-            const trailHue = hue;
-            ctx.strokeStyle = `hsla(${trailHue}, ${70 + Math.random() * 30}%, ${65 + Math.random() * 25}%, ${alpha * 0.3})`;
+        // Draw faint comet trail (less frequently)
+        if (star.size > 2.0 && Math.random() > 0.95) {
+            ctx.strokeStyle = `hsla(${hue}, ${70 + Math.random() * 30}%, ${65 + Math.random() * 25}%, ${alpha * 0.3})`;
             ctx.lineWidth = star.size * 0.4;
-            
-            const trailLength = star.size * 20;
+
+            const trailLength = star.size * 15;
             ctx.beginPath();
             ctx.moveTo(star.x, star.y);
             ctx.lineTo(star.x - trailLength * Math.cos(0.5), star.y - trailLength * Math.sin(0.5));
             ctx.stroke();
         }
-
-        ctx.shadowBlur = 0;
     });
 
     // Draw score popups
@@ -1765,6 +1529,8 @@ function checkCollisions() {
                             color: '#f00',
                             vertices: vertices
                         };
+                        // Calculate and store asteroid colors for performance
+                        updateAsteroidColors(newAsteroid);
                         asteroids.push(newAsteroid);
                     }
                 }
