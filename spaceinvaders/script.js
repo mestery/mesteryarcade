@@ -22,6 +22,116 @@ const spriteCache = new Map();
 // Performance optimization: cached gradients
 let cachedGradients = null;
 
+// Sprite pre-rendering flag
+let spritesPreRendered = false;
+
+function preRenderSprite(sprite, colors, size) {
+    const width = sprite[0].length;
+    const height = sprite.length;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    const pixelSize = 1;
+
+    ctx.shadowBlur = 3;
+    ctx.shadowColor = colors[0];
+
+    for (let row = 0; row < sprite.length; row++) {
+        for (let col = 0; col < sprite[row].length; col++) {
+            const cellValue = sprite[row][col];
+            if (cellValue > 0) {
+                ctx.fillStyle = colors[cellValue % colors.length];
+
+                if (cellValue > 3) {
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = colors[0];
+                }
+
+                ctx.fillRect(col, row, pixelSize, pixelSize);
+            }
+        }
+    }
+
+    ctx.shadowBlur = 0;
+
+    return canvas;
+}
+
+function preRenderAllSprites() {
+    if (spritesPreRendered) return;
+
+    const spriteDefinitions = [
+        { sprite: PLAYER_SPRITE.frame0, colors: PLAYER_SPRITE.colors, name: 'player_frame0' },
+        { sprite: PLAYER_SPRITE.frame1, colors: PLAYER_SPRITE.colors, name: 'player_frame1' },
+        { sprite: ALIEN_SPRITE_1.frame0, colors: ALIEN_SPRITE_1.colors, name: 'alien1_frame0' },
+        { sprite: ALIEN_SPRITE_1.frame1, colors: ALIEN_SPRITE_1.colors, name: 'alien1_frame1' },
+        { sprite: ALIEN_SPRITE_2.frame0, colors: ALIEN_SPRITE_2.colors, name: 'alien2_frame0' },
+        { sprite: ALIEN_SPRITE_2.frame1, colors: ALIEN_SPRITE_2.colors, name: 'alien2_frame1' },
+        { sprite: ALIEN_SPRITE_3.frame0, colors: ALIEN_SPRITE_3.colors, name: 'alien3_frame0' },
+        { sprite: ALIEN_SPRITE_3.frame1, colors: ALIEN_SPRITE_3.colors, name: 'alien3_frame1' },
+        { sprite: MYSTERY_SPRITE.frame0, colors: MYSTERY_SPRITE.colors, name: 'mystery_frame0' },
+        { sprite: MYSTERY_SPRITE.frame1, colors: MYSTERY_SPRITE.colors, name: 'mystery_frame1' }
+    ];
+
+    spriteDefinitions.forEach(def => {
+        const cacheKey = `${def.sprite.length}x${def.sprite[0].length}-${def.colors.join(',')}`;
+        if (!spriteCache.has(cacheKey)) {
+            const canvas = preRenderSprite(def.sprite, def.colors);
+            spriteCache.set(cacheKey, {
+                canvas: canvas,
+                width: def.sprite[0].length,
+                height: def.sprite.length
+            });
+        }
+    });
+
+    spritesPreRendered = true;
+}
+
+function drawPixelSprite(ctx, sprite, x, y, size, colors) {
+    const cacheKey = `${sprite.length}x${sprite[0].length}-${colors.join(',')}`;
+    const cached = spriteCache.get(cacheKey);
+
+    if (cached) {
+        // Use cached sprite
+        const spriteWidth = cached.width;
+        const spriteHeight = cached.height;
+        const scale = size / spriteHeight;
+
+        ctx.shadowBlur = 3;
+        ctx.shadowColor = colors[0];
+        ctx.drawImage(cached.canvas, x, y, spriteWidth * scale, spriteHeight * scale);
+        ctx.shadowBlur = 0;
+        return;
+    }
+
+    // Fallback to original drawing if not cached
+    const pixelSize = size / sprite.length;
+
+    ctx.shadowBlur = 3;
+    ctx.shadowColor = colors[0];
+
+    for (let row = 0; row < sprite.length; row++) {
+        for (let col = 0; col < sprite[row].length; col++) {
+            const cellValue = sprite[row][col];
+            if (cellValue > 0) {
+                ctx.fillStyle = colors[cellValue % colors.length];
+
+                if (cellValue > 3) {
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = colors[0];
+                }
+
+                ctx.fillRect(x + col * pixelSize, y + row * pixelSize, pixelSize - 0.5, pixelSize - 0.5);
+            }
+        }
+    }
+
+    ctx.shadowBlur = 0;
+}
+
 // Keyboard input state
 const keys = {};
 
@@ -158,13 +268,13 @@ function setupTouchButton(btn, controlName) {
 
     const handleMove = (e) => {
         if (!isTouching || !e.changedTouches || e.changedTouches.length === 0) return;
-        
+
         // Find our tracked touch
         const touch = Array.from(e.changedTouches).find(t => t.identifier === touchId);
         if (!touch) return;
-        
+
         e.preventDefault();
-        
+
         const rect = btn.getBoundingClientRect();
 
         // Check if finger is still over the button
@@ -178,7 +288,7 @@ function setupTouchButton(btn, controlName) {
             touchControls[controlName] = false;
             btn.classList.remove('active');
         }
-        
+
         if (isOver && isTouching) {
             // Still on button, auto-shoot for shoot control
             if (controlName === 'shoot' && gameRunning && player) {
@@ -205,11 +315,11 @@ function setupTouchButton(btn, controlName) {
         if (!touch) return;
 
         e.preventDefault();
-        
+
         // Only reset if this is the same touch that started it
         touchControls[controlName] = false;
         btn.classList.remove('active');
-        
+
         // Reset tracked touch
         if (touchId === touch.identifier) {
             touchId = null;
@@ -406,26 +516,36 @@ function drawCrater(x, y, size, color) {
 
 // Nebula clouds with better gradients - optimized with caching
 function drawNebula() {
-    // Use cached gradients if available
-    if (!cachedGradients) {
+    // Use cached background if initialized
+    if (!bgInitialized) {
         const centerX = canvas.width / 2;
 
-        cachedGradients = {
-            main: bgCtx.createRadialGradient(centerX, 100, 30, centerX, 80, 200),
-            side: bgCtx.createRadialGradient(100, 80, 20, 100, 60, 150),
-            right: bgCtx.createRadialGradient(canvas.width - 100, 90, 25, canvas.width - 100, 70, 140)
-        };
+        // Create cached gradients on background canvas
+        const mainGrad = bgCtx.createRadialGradient(centerX, 100, 30, centerX, 80, 200);
+        mainGrad.addColorStop(0, 'rgba(150, 50, 150, 0.25)');
+        mainGrad.addColorStop(0.3, 'rgba(0, 150, 200, 0.18)');
+        mainGrad.addColorStop(0.6, 'rgba(0, 50, 180, 0.12)');
+        mainGrad.addColorStop(1, 'rgba(0, 20, 100, 0)');
+        bgCtx.fillStyle = mainGrad;
+        bgCtx.fillRect(0, 0, canvas.width, 160);
 
-        cachedGradients.main.addColorStop(0, 'rgba(150, 50, 150, 0.25)');
-        cachedGradients.main.addColorStop(0.3, 'rgba(0, 150, 200, 0.18)');
-        cachedGradients.main.addColorStop(0.6, 'rgba(0, 50, 180, 0.12)');
-        cachedGradients.main.addColorStop(1, 'rgba(0, 20, 100, 0)');
+        const sideGrad = bgCtx.createRadialGradient(100, 80, 20, 100, 60, 150);
+        sideGrad.addColorStop(0, 'rgba(255, 0, 150, 0.15)');
+        sideGrad.addColorStop(1, 'rgba(255, 0, 150, 0)');
+        bgCtx.fillStyle = sideGrad;
+        bgCtx.beginPath();
+        bgCtx.arc(120, 90, 140, -0.5, Math.PI + 0.5);
+        bgCtx.fill();
 
-        cachedGradients.side.addColorStop(0, 'rgba(255, 0, 150, 0.15)');
-        cachedGradients.side.addColorStop(1, 'rgba(255, 0, 150, 0)');
+        const rightGrad = bgCtx.createRadialGradient(canvas.width - 100, 90, 25, canvas.width - 100, 70, 140);
+        rightGrad.addColorStop(0, 'rgba(100, 50, 255, 0.15)');
+        rightGrad.addColorStop(1, 'rgba(100, 50, 255, 0)');
+        bgCtx.fillStyle = rightGrad;
+        bgCtx.beginPath();
+        bgCtx.arc(canvas.width - 120, 95, 130, Math.PI - 0.5, 0.5);
+        bgCtx.fill();
 
-        cachedGradients.right.addColorStop(0, 'rgba(100, 50, 255, 0.15)');
-        cachedGradients.right.addColorStop(1, 'rgba(100, 50, 255, 0)');
+        bgInitialized = true;
     }
 
     // Draw from cached background
@@ -1535,7 +1655,7 @@ canvas.addEventListener('touchstart', (e) => {
     if (gameRunning) {
         e.preventDefault();
     }
-    
+
     // Only handle if touch is on canvas (not controls)
     if (e.target === canvas) {
         touchStartX = e.touches[0].clientX;
@@ -1546,10 +1666,10 @@ canvas.addEventListener('touchstart', (e) => {
 
 canvas.addEventListener('touchmove', (e) => {
     if (!gameRunning || e.target !== canvas) return;
-    
+
     // Prevent default to avoid scrolling/zooming while playing
     e.preventDefault();
-    
+
     const touchX = e.touches[0].clientX;
     const touchY = e.touches[0].clientY;
 
@@ -1593,5 +1713,6 @@ canvas.addEventListener('touchend', (e) => {
 });
 
 // Initialize on load
+preRenderAllSprites();
 initStars();
 initGame();
