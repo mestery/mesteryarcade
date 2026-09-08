@@ -10,6 +10,18 @@ const restartButton = document.getElementById('restart-button');
 const startScreen = document.getElementById('start-screen');
 const startButton = document.getElementById('start-button');
 
+// Performance optimization: offscreen canvas for static background
+const bgCanvas = document.createElement('canvas');
+bgCanvas.width = canvas.width;
+bgCanvas.height = canvas.height;
+const bgCtx = bgCanvas.getContext('2d');
+
+// Performance optimization: pre-rendered sprites cache
+const spriteCache = new Map();
+
+// Performance optimization: cached gradients
+let cachedGradients = null;
+
 // Keyboard input state
 const keys = {};
 
@@ -43,6 +55,7 @@ let mysteryShip = null; // Bonus alien
 let mysteryTimer = 0;
 let screenShake = 0;
 let gameSpeedMultiplier = 1;
+let bgInitialized = false;
 
 // Update high score display on load
 highScoreElement.textContent = `HIGH SCORE: ${highScore}`;
@@ -277,8 +290,8 @@ const COLORS = {
 function initStars() {
     stars = [];
 
-    // Near stars (faster, larger)
-    for (let i = 0; i < 40; i++) {
+    // Near stars (faster, larger) - reduced from 40 to 20
+    for (let i = 0; i < 20; i++) {
         stars.push({
             x: Math.random() * canvas.width,
             y: Math.random() * (canvas.height - 60),
@@ -290,8 +303,8 @@ function initStars() {
         });
     }
 
-    // Far stars (slower, smaller)
-    for (let i = 0; i < 120; i++) {
+    // Far stars (slower, smaller) - reduced from 120 to 80
+    for (let i = 0; i < 80; i++) {
         stars.push({
             x: Math.random() * canvas.width,
             y: Math.random() * (canvas.height - 60),
@@ -305,6 +318,7 @@ function initStars() {
 }
 
 function drawStars() {
+    // Optimize by reducing shadow blur for stars
     stars.forEach(star => {
         star.brightness += star.twinkleSpeed;
         if (star.brightness > 1 || star.brightness < 0.2) {
@@ -320,19 +334,24 @@ function drawStars() {
 
         const alpha = Math.max(0.2, Math.min(1, star.brightness));
 
-        // Draw star with glow
+        // Draw star with optimized glow
         ctx.fillStyle = typeof star.color === 'string' ? star.color : star.color[0];
+        ctx.globalAlpha = alpha;
 
-        // Multi-color stars for retro feel
-        if (!Array.isArray(star.color)) {
-            ctx.shadowBlur = star.size * 4;
+        // Only use shadow for larger stars to reduce performance cost
+        if (!Array.isArray(star.color) && star.size > 1.5) {
+            ctx.shadowBlur = 2;
             ctx.shadowColor = star.color;
+        } else {
+            ctx.shadowBlur = 0;
         }
 
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
     });
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
 
     // Draw a retro moon with enhanced detail
     drawMoon();
@@ -385,38 +404,32 @@ function drawCrater(x, y, size, color) {
     }
 }
 
-// Nebula clouds with better gradients
+// Nebula clouds with better gradients - optimized with caching
 function drawNebula() {
-    const centerX = canvas.width / 2;
+    // Use cached gradients if available
+    if (!cachedGradients) {
+        const centerX = canvas.width / 2;
 
-    // Draw colorful nebulas in the background
-    const gradient = ctx.createRadialGradient(centerX, 100, 30, centerX, 80, 200);
-    gradient.addColorStop(0, 'rgba(150, 50, 150, 0.25)');
-    gradient.addColorStop(0.3, 'rgba(0, 150, 200, 0.18)');
-    gradient.addColorStop(0.6, 'rgba(0, 50, 180, 0.12)');
-    gradient.addColorStop(1, 'rgba(0, 20, 100, 0)');
+        cachedGradients = {
+            main: bgCtx.createRadialGradient(centerX, 100, 30, centerX, 80, 200),
+            side: bgCtx.createRadialGradient(100, 80, 20, 100, 60, 150),
+            right: bgCtx.createRadialGradient(canvas.width - 100, 90, 25, canvas.width - 100, 70, 140)
+        };
 
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, 160);
+        cachedGradients.main.addColorStop(0, 'rgba(150, 50, 150, 0.25)');
+        cachedGradients.main.addColorStop(0.3, 'rgba(0, 150, 200, 0.18)');
+        cachedGradients.main.addColorStop(0.6, 'rgba(0, 50, 180, 0.12)');
+        cachedGradients.main.addColorStop(1, 'rgba(0, 20, 100, 0)');
 
-    // Add additional nebulas on sides
-    const sideGradient = ctx.createRadialGradient(100, 80, 20, 100, 60, 150);
-    sideGradient.addColorStop(0, 'rgba(255, 0, 150, 0.15)');
-    sideGradient.addColorStop(1, 'rgba(255, 0, 150, 0)');
+        cachedGradients.side.addColorStop(0, 'rgba(255, 0, 150, 0.15)');
+        cachedGradients.side.addColorStop(1, 'rgba(255, 0, 150, 0)');
 
-    ctx.fillStyle = sideGradient;
-    ctx.beginPath();
-    ctx.arc(120, 90, 140, -0.5, Math.PI + 0.5);
-    ctx.fill();
+        cachedGradients.right.addColorStop(0, 'rgba(100, 50, 255, 0.15)');
+        cachedGradients.right.addColorStop(1, 'rgba(100, 50, 255, 0)');
+    }
 
-    const rightGradient = ctx.createRadialGradient(canvas.width - 100, 90, 25, canvas.width - 100, 70, 140);
-    rightGradient.addColorStop(0, 'rgba(100, 50, 255, 0.15)');
-    rightGradient.addColorStop(1, 'rgba(100, 50, 255, 0)');
-
-    ctx.fillStyle = rightGradient;
-    ctx.beginPath();
-    ctx.arc(canvas.width - 120, 95, 130, Math.PI - 0.5, 0.5);
-    ctx.fill();
+    // Draw from cached background
+    ctx.drawImage(bgCanvas, 0, 0);
 }
 
 // Particle system for explosions with enhanced effects
