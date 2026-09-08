@@ -21,7 +21,7 @@ let floatingTexts = [];
 
 // Nebula background - colorful glowing clouds with animated gradients
 let nebulas = [];
-for (let i = 0; i < 12; i++) {
+for (let i = 0; i < 6; i++) { // Reduced from 12 to 6
     nebulas.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -36,7 +36,7 @@ for (let i = 0; i < 12; i++) {
 
 // Enhanced starfield with parallax effect and colored stars
 let stars = [];
-for (let i = 0; i < 250; i++) {
+for (let i = 0; i < 120; i++) { // Reduced from 250 to 120
     stars.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -317,10 +317,10 @@ function drawShip() {
 
     // Ship glow effect - dynamic based on state
     if (ship.thrusting) {
-        ctx.shadowBlur = 40;
+        ctx.shadowBlur = 20;
         ctx.shadowColor = '#00ffff';
     } else {
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 15;
         ctx.shadowColor = '#00ffff';
     }
 
@@ -340,9 +340,7 @@ function drawShip() {
     // Fill and stroke with gradient for depth
     const bodyGradient = ctx.createLinearGradient(-ship.radius, -ship.radius, ship.radius, ship.radius);
     bodyGradient.addColorStop(0, '#002a5f');
-    bodyGradient.addColorStop(0.3, '#001f3f');
-    bodyGradient.addColorStop(0.5, '#002e6f');
-    bodyGradient.addColorStop(0.7, '#001f3f');
+    bodyGradient.addColorStop(0.5, '#001f3f');
     bodyGradient.addColorStop(1, '#002a5f');
 
     ctx.fillStyle = bodyGradient;
@@ -381,118 +379,35 @@ function drawShip() {
     ctx.arc(0, -ship.radius * 0.3, ship.radius * 0.15, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Draw thrust if active
+    // Draw thrust if active - simplified
     if (ship.thrusting) {
-        // Thrust glow effect - dynamic flickering
         const flicker = Math.sin(Date.now() / 12) * 0.4 + 0.6;
-        ctx.shadowBlur = 50 * flicker;
+        ctx.shadowBlur = 20 * flicker;
         ctx.shadowColor = '#ff3300';
 
-        // Create flickering flame effect with multiple passes
-        const flameLength = ship.radius * (1.3 + Math.random() * 0.5);
-        const flameWidth = ship.radius * (0.4 + Math.random() * 0.2);
+        const flameLength = ship.radius * 1.5;
+        const flameWidth = ship.radius * 0.5;
 
-        // Outer flame glow - intense orange to magenta gradient
-        const outerGradient = ctx.createLinearGradient(0, ship.radius, 0, ship.radius + flameLength);
-        outerGradient.addColorStop(0, 'rgba(255, 80, 0, 1)');
-        outerGradient.addColorStop(0.2, 'rgba(255, 140, 0, 0.8)');
-        outerGradient.addColorStop(0.5, 'rgba(255, 180, 50, 0.5)');
-        outerGradient.addColorStop(1, 'rgba(255, 100, 100, 0)');
+        // Simplified flame
+        const flameGradient = ctx.createLinearGradient(0, ship.radius, 0, ship.radius + flameLength);
+        flameGradient.addColorStop(0, '#ff4400');
+        flameGradient.addColorStop(1, 'transparent');
 
-        ctx.fillStyle = outerGradient;
+        ctx.fillStyle = flameGradient;
         ctx.beginPath();
         ctx.moveTo(-ship.radius * 0.7, ship.radius);
-        ctx.quadraticCurveTo(0, ship.radius + flameLength * 1.25, ship.radius * 0.7, ship.radius);
+        ctx.quadraticCurveTo(0, ship.radius + flameLength, ship.radius * 0.7, ship.radius);
         ctx.closePath();
         ctx.fill();
 
-        // Middle flame - cyan core with magenta edges
-        const middleGradient = ctx.createLinearGradient(0, ship.radius, 0, ship.radius + flameLength);
-        middleGradient.addColorStop(0, '#ff4400');
-        middleGradient.addColorStop(0.3, '#ffff00');
-        middleGradient.addColorStop(0.6, '#ff8800');
-        middleGradient.addColorStop(1, 'rgba(255, 180, 50, 0)');
-
-        ctx.fillStyle = middleGradient;
-        ctx.beginPath();
-        ctx.moveTo(-flameWidth * 0.75, ship.radius);
-        ctx.quadraticCurveTo(0, ship.radius + flameLength * 1.2, flameWidth * 0.75, ship.radius);
-        ctx.closePath();
-        ctx.fill();
-
-        // Inner core of flame - white hot with cyan edge
-        const innerGradient = ctx.createLinearGradient(0, ship.radius, 0, ship.radius + flameLength * 0.75);
-        innerGradient.addColorStop(0, '#ffffff');
-        innerGradient.addColorStop(0.2, '#ffffee');
-        innerGradient.addColorStop(0.4, '#aaffff');
-        innerGradient.addColorStop(1, 'transparent');
-
-        ctx.fillStyle = innerGradient;
-        ctx.shadowBlur = 30 * flicker;
-        ctx.shadowColor = '#aaffff';
-        ctx.beginPath();
-        ctx.moveTo(-flameWidth * 0.4, ship.radius);
-        ctx.quadraticCurveTo(0, ship.radius + flameLength * 0.75, flameWidth * 0.4, ship.radius);
-        ctx.closePath();
-        ctx.fill();
-
-        // Add trailing sparks with glow - more numerous and brighter
-        const sparkCount = 3 + Math.floor(Math.random() * 4);
-        for (let i = 0; i < sparkCount; i++) {
-            ctx.shadowBlur = 25 * flicker;
-            ctx.shadowColor = '#ff0066';
-
+        // Simplified sparks
+        if (Math.random() > 0.5) {
             const sparkX = (Math.random() - 0.5) * flameWidth;
-            const sparkY = ship.radius + flameLength + Math.random() * 40;
-            const size = 2 + Math.random() * 5;
-
-            // Spark trail
-            ctx.fillStyle = `rgba(255, 120, 180, ${0.7 + Math.random() * 0.3})`;
-            ctx.beginPath();
-            ctx.arc(sparkX, sparkY, size, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Add glow ring around spark
-            const sparkGradient = ctx.createRadialGradient(sparkX, sparkY, size/2, sparkX, sparkY, size * 4);
-            sparkGradient.addColorStop(0, 'rgba(255, 0, 180, 1)');
-            sparkGradient.addColorStop(0.5, 'rgba(255, 50, 180, 0.5)');
-            sparkGradient.addColorStop(1, 'transparent');
-            ctx.fillStyle = sparkGradient;
-            ctx.beginPath();
-            ctx.arc(sparkX, sparkY, size * 4, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Add side thruster sparks with colors
-        for (let i = 0; i < 2; i++) {
-            ctx.shadowBlur = 18;
-            ctx.shadowColor = '#00ccff';
-
-            const sideThrustX = (Math.random() - 0.5) * ship.radius * 1.6;
-            const sideThrustY = ship.radius + Math.random() * 20;
-
-            ctx.fillStyle = `rgba(${50 + Math.floor(Math.random()*100)}, ${200 + Math.floor(Math.random()*55)}, 255, ${0.7 + Math.random() * 0.3})`;
-            ctx.beginPath();
-            ctx.arc(sideThrustX, sideThrustY, 3 + Math.random() * 3, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Add trail particles
-        if (Math.random() > 0.2) {
-            const trailX = (Math.random() - 0.5) * ship.radius;
-            const trailY = ship.radius + flameLength + Math.random() * 30;
+            const sparkY = ship.radius + flameLength + Math.random() * 20;
             
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#aaffff';
-            
-            // Trail particle with glow
-            const trailGradient = ctx.createRadialGradient(trailX, trailY, 0, trailX, trailY, 15);
-            trailGradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
-            trailGradient.addColorStop(1, 'transparent');
-            
-            ctx.fillStyle = trailGradient;
+            ctx.fillStyle = `rgba(255, 120, 180, ${0.5 + Math.random() * 0.3})`;
             ctx.beginPath();
-            ctx.arc(trailX, trailY, 15, 0, Math.PI * 2);
+            ctx.arc(sparkX, sparkY, 2 + Math.random() * 3, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -504,60 +419,11 @@ function drawShip() {
     }
 
     // Add engine vents on sides
-    ctx.shadowBlur = 5;
-    ctx.shadowColor = '#00ffff';
     ctx.fillStyle = 'rgba(170, 255, 255, 0.4)';
     ctx.beginPath();
     ctx.arc(-ship.radius * 0.5, ship.radius * 0.3, 2, 0, Math.PI * 2);
     ctx.arc(ship.radius * 0.5, ship.radius * 0.3, 2, 0, Math.PI * 2);
     ctx.fill();
-
-    // Add engine glow on sides with color variation
-    if (ship.thrusting) {
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = '#ff5500';
-        const engineGlowGradient = ctx.createLinearGradient(-ship.radius * 0.5, ship.radius * 0.3, ship.radius * 0.5, ship.radius * 0.3);
-        engineGlowGradient.addColorStop(0, 'rgba(255, 80, 50, 0.7)');
-        engineGlowGradient.addColorStop(0.5, 'rgba(255, 180, 100, 0.9)');
-        engineGlowGradient.addColorStop(1, 'rgba(255, 80, 50, 0.7)');
-        ctx.fillStyle = engineGlowGradient;
-        ctx.beginPath();
-        ctx.arc(-ship.radius * 0.5, ship.radius * 0.3, 5 + Math.random() * 2, 0, Math.PI * 2);
-        ctx.arc(ship.radius * 0.5, ship.radius * 0.3, 5 + Math.random() * 2, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    // Draw diagonal accents on ship for retro feel
-    ctx.strokeStyle = 'rgba(170, 255, 255, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.shadowBlur = 0;
-    ctx.beginPath();
-    ctx.moveTo(-ship.radius * 0.3, -ship.radius * 0.5);
-    ctx.lineTo(ship.radius * 0.2, ship.radius * 0.2);
-    ctx.stroke();
-
-    // Add side thruster glow effect
-    if (ship.thrusting) {
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = '#aaffff';
-        
-        // Thrust flames on sides
-        const sideFlameLength = ship.radius * 0.6;
-        ctx.fillStyle = 'rgba(170, 255, 255, 0.5)';
-        ctx.beginPath();
-        ctx.moveTo(-ship.radius * 0.6, ship.radius * 0.4);
-        ctx.lineTo(-ship.radius * 1.2, ship.radius * 0.7 + Math.random() * 10);
-        ctx.lineTo(-ship.radius * 0.6, ship.radius * 0.5);
-        ctx.closePath();
-        ctx.fill();
-        
-        ctx.beginPath();
-        ctx.moveTo(ship.radius * 0.6, ship.radius * 0.4);
-        ctx.lineTo(ship.radius * 1.2, ship.radius * 0.7 + Math.random() * 10);
-        ctx.lineTo(ship.radius * 0.6, ship.radius * 0.5);
-        ctx.closePath();
-        ctx.fill();
-    }
 
     ctx.restore();
 }
@@ -612,11 +478,11 @@ function drawAsteroids() {
         const { hue: asteroidHue, saturation, lightness } = asteroid;
         const mainColor = `hsl(${asteroidHue}, ${saturation}%, ${lightness}%)`;
 
-        // Outer glow with pulsing effect
-        const pulse = Math.sin(Date.now() / 400) * 8 + 12;
+        // Simplified asteroid rendering
+        const pulse = Math.sin(Date.now() / 400) * 5 + 10;
         ctx.strokeStyle = mainColor;
-        ctx.lineWidth = 4;
-        ctx.shadowBlur = 20 + pulse;
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 10 + pulse;
         ctx.shadowColor = mainColor;
 
         ctx.beginPath();
@@ -635,202 +501,27 @@ function drawAsteroids() {
 
         ctx.closePath();
 
-        // Create gradient fill for 3D effect with multiple light sources
+        // Simplified gradient fill
         const gradient = ctx.createRadialGradient(-asteroid.radius * 0.35, -asteroid.radius * 0.35, asteroid.radius * 0.15, 0, 0, asteroid.radius);
-
-        // Add more gradient stops for dramatic lighting
-        gradient.addColorStop(0, `hsl(${asteroidHue}, ${saturation}%, ${lightness + 30}%)`);
-        gradient.addColorStop(0.2, `hsl(${asteroidHue}, ${saturation}%, ${lightness + 18}%)`);
-        gradient.addColorStop(0.5, `hsl(${asteroidHue}, ${saturation}%, ${lightness + 8}%)`);
-        gradient.addColorStop(0.75, `hsl(${asteroidHue}, ${saturation}%, ${lightness - 5}%)`);
-        gradient.addColorStop(1, `hsl(${asteroidHue}, ${saturation}%, ${Math.max(5, lightness - 40)}%)`);
+        gradient.addColorStop(0, `hsl(${asteroidHue}, ${saturation}%, ${lightness + 20}%)`);
+        gradient.addColorStop(1, `hsl(${asteroidHue}, ${saturation}%, ${Math.max(5, lightness - 30)}%)`);
 
         ctx.fillStyle = gradient;
         ctx.fill();
-
-        // Draw stroke with glow
         ctx.stroke();
-
-        // Remove glow for detail lines
         ctx.shadowBlur = 0;
 
-        // Draw crater details - retro space rock style with glow
-        const craterCount = Math.floor(asteroid.radius / 8);
+        // Draw crater details - simplified
+        const craterCount = Math.floor(asteroid.radius / 12);
 
         for (let i = 0; i < craterCount; i++) {
             const craterX = Math.cos(i * 2.5 + asteroid.rotation) * (asteroid.radius * 0.45);
             const craterY = Math.sin(i * 2.5 + asteroid.rotation) * (asteroid.radius * 0.45);
             const craterRadius = asteroid.radius * (0.08 + Math.random() * 0.15);
-
-            // Crater with gradient for depth
-            const craterGradient = ctx.createRadialGradient(craterX, craterY, 0, craterX, craterY, craterRadius);
-            craterGradient.addColorStop(0, 'rgba(0, 0, 0, 0.7)');
-            craterGradient.addColorStop(0.4, 'rgba(0, 0, 0, 0.35)');
-            craterGradient.addColorStop(1, 'rgba(0, 0, 0, 0.9)');
-
-            ctx.fillStyle = craterGradient;
-            ctx.shadowBlur = 5;
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             ctx.beginPath();
             ctx.arc(craterX, craterY, craterRadius, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Add crater rim highlight
-            if (craterRadius > 2) {
-                ctx.strokeStyle = `rgba(${asteroidHue}, ${saturation}, ${lightness + 40}, 0.5)`;
-                ctx.lineWidth = 1;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = mainColor;
-                ctx.beginPath();
-                ctx.arc(craterX, craterY, craterRadius * 0.85, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-        }
-
-        // Add crater highlights for depth (specular reflection)
-        if (asteroid.radius > 25) {
-            const highlightX = -asteroid.radius * 0.35;
-            const highlightY = -asteroid.radius * 0.35;
-
-            // Glowing highlight
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ffffff';
-
-            const highlightGradient = ctx.createRadialGradient(highlightX, highlightY, 0, highlightX, highlightY, asteroid.radius * 0.28);
-            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
-            highlightGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.25)');
-            highlightGradient.addColorStop(1, 'transparent');
-
-            ctx.fillStyle = highlightGradient;
-            ctx.beginPath();
-            ctx.arc(highlightX, highlightY, asteroid.radius * 0.28, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Outer rim highlight
-            ctx.shadowBlur = 10;
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.18 + Math.random() * 0.1})`;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(highlightX, highlightY, asteroid.radius * 0.18, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Add crater to highlight area
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-            ctx.shadowBlur = 5;
-            ctx.beginPath();
-            ctx.arc(highlightX * 1.2, highlightY * 1.2, asteroid.radius * 0.08, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Add small rocks stuck to larger asteroids with glow effect
-        if (asteroid.radius > 30 && Math.random() > 0.85) {
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = mainColor;
-
-            const smallRockX = Math.cos(Math.random() * Math.PI * 2) * (asteroid.radius * 0.85);
-            const smallRockY = Math.sin(Math.random() * Math.PI * 2) * (asteroid.radius * 0.85);
-            const smallRockRadius = asteroid.radius * (0.15 + Math.random() * 0.1);
-
-            // Small rock gradient
-            const smallRockGradient = ctx.createRadialGradient(smallRockX, smallRockY, 0, smallRockX, smallRockY, smallRockRadius);
-            smallRockGradient.addColorStop(0, `hsl(${asteroidHue}, ${saturation - 15}%, ${lightness + 30}%)`);
-            smallRockGradient.addColorStop(0.5, `hsl(${asteroidHue}, ${saturation - 10}%, ${lightness + 10}%)`);
-            smallRockGradient.addColorStop(1, `hsl(${asteroidHue}, ${saturation - 20}%, ${Math.max(5, lightness - 40)}%)`);
-
-            ctx.fillStyle = smallRockGradient;
-            ctx.beginPath();
-            ctx.arc(smallRockX, smallRockY, smallRockRadius, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Small rock outline with glow
-            ctx.strokeStyle = `rgba(${asteroidHue}, ${saturation}, ${lightness}, 0.5)`;
-            ctx.lineWidth = 1;
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = mainColor;
-            ctx.stroke();
-
-            // Small crater on rock
-            if (smallRockRadius > 3) {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-                ctx.beginPath();
-                ctx.arc(smallRockX + smallRockRadius * 0.3, smallRockY + smallRockRadius * 0.3, smallRockRadius * 0.25, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        // Add small decorative crystals on some asteroids
-        if (asteroid.radius > 30 && Math.random() > 0.9) {
-            const crystalX = Math.cos(Math.random() * Math.PI * 2) * (asteroid.radius * 0.8);
-            const crystalY = Math.sin(Math.random() * Math.PI * 2) * (asteroid.radius * 0.8);
-            const crystalSize = asteroid.radius * (0.12 + Math.random() * 0.1);
-
-            // Glowing crystal with multiple colors
-            const crystalHue = Math.random() > 0.5 ? 180 + Math.random() * 60 : 280 + Math.random() * 40;
-            const crystalColor = `hsl(${crystalHue}, ${90 + Math.random() * 10}%, ${75 + Math.random() * 20}%)`;
-            
-            ctx.shadowBlur = 18;
-            ctx.shadowColor = crystalColor;
-
-            // Crystal shape - pyramid-like
-            const points = 3 + Math.floor(Math.random() * 3);
-            ctx.fillStyle = crystalColor;
-            
-            ctx.beginPath();
-            for (let i = 0; i < points; i++) {
-                const angle = (i / points) * Math.PI * 2 + asteroid.rotation;
-                ctx.lineTo(
-                    crystalX + Math.cos(angle) * crystalSize,
-                    crystalY + Math.sin(angle) * crystalSize
-                );
-            }
-            ctx.closePath();
-            ctx.fill();
-
-            // Inner core glow
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowBlur = 25;
-            ctx.beginPath();
-            ctx.arc(crystalX, crystalY, crystalSize * 0.35, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Crystal tip highlight
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.shadowBlur = 15;
-            ctx.beginPath();
-            ctx.arc(crystalX + crystalSize * 0.2, crystalY - crystalSize * 0.2, crystalSize * 0.15, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Add surface details - retro texture lines
-        if (asteroid.radius > 35 && Math.random() > 0.92) {
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = mainColor;
-            
-            const lineX = Math.cos(Math.random() * Math.PI * 2) * (asteroid.radius * 0.6);
-            const lineY = Math.sin(Math.random() * Math.PI * 2) * (asteroid.radius * 0.6);
-            const lineLength = asteroid.radius * (0.2 + Math.random() * 0.4);
-            const lineAngle = Math.random() * Math.PI * 2;
-            
-            ctx.strokeStyle = `rgba(${asteroidHue}, ${saturation - 10}, ${lightness + 30}, 0.5)`;
-            ctx.lineWidth = 1;
-            
-            const endX = lineX + Math.cos(lineAngle) * lineLength;
-            const endY = lineY + Math.sin(lineAngle) * lineLength;
-            
-            ctx.beginPath();
-            ctx.moveTo(lineX, lineY);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
-
-            // Line glow at ends
-            const startGlow = ctx.createRadialGradient(lineX, lineY, 0, lineX, lineY, 5);
-            startGlow.addColorStop(0, mainColor);
-            startGlow.addColorStop(1, 'transparent');
-            
-            ctx.fillStyle = startGlow;
-            ctx.beginPath();
-            ctx.arc(lineX, lineY, 5, 0, Math.PI * 2);
             ctx.fill();
         }
 
@@ -858,158 +549,74 @@ function updateBullets() {
 // Draw bullets with enhanced graphics
 function drawBullets() {
     bullets.forEach(bullet => {
-        // Bullet glow effect - energetic trail
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = bullet.color || '#0ff';
-
-        // Create cone-shaped beam effect
+        // Simplified bullet rendering
         const angle = Math.atan2(bullet.velocity.y, bullet.velocity.x);
-        const trailLength = 15 + Math.random() * 10;
-        
-        // Calculate beam points
-        const tipX = bullet.x - Math.cos(angle) * trailLength;
-        const tipY = bullet.y - Math.sin(angle) * trailLength;
 
-        // Beam outer glow
-        const beamGradient = ctx.createRadialGradient(bullet.x, bullet.y, 2, tipX, tipY, 8);
-        
-        // Color based on bullet type
-        if (bullet.color === '#ff0066') {
-            // Red/pink beam
-            beamGradient.addColorStop(0, 'rgba(255, 0, 102, 1)');
-            beamGradient.addColorStop(0.3, 'rgba(255, 100, 150, 0.6)');
-            beamGradient.addColorStop(1, 'rgba(255, 0, 102, 0)');
-        } else {
-            // Cyan beam
-            beamGradient.addColorStop(0, 'rgba(0, 255, 255, 1)');
-            beamGradient.addColorStop(0.3, 'rgba(100, 255, 255, 0.6)');
-            beamGradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
-        }
+        ctx.shadowBlur = 10;
+    ctx.shadowColor = bullet.color || '#0ff';
+    ctx.fillStyle = bullet.color || '#0ff';
+    ctx.beginPath();
+    ctx.arc(bullet.x, bullet.y, 3, 0, Math.PI * 2);
+    ctx.fill();
 
-        ctx.fillStyle = beamGradient;
+    // Simple trail
+    if (Math.random() > 0.7) {
+        ctx.shadowBlur = 5;
+        ctx.fillStyle = `rgba(0, 255, 255, 0.3)`;
         ctx.beginPath();
-        ctx.moveTo(tipX, tipY);
-        ctx.lineTo(bullet.x + Math.sin(angle) * 4, bullet.y - Math.cos(angle) * 4);
-        ctx.lineTo(bullet.x - Math.sin(angle) * 4, bullet.y + Math.cos(angle) * 4);
-        ctx.closePath();
+        ctx.arc(bullet.x - Math.cos(angle) * 10, bullet.y - Math.sin(angle) * 10, 1.5, 0, Math.PI * 2);
         ctx.fill();
+    }
 
-        // Inner core - bright white/yellow
-        const coreGradient = ctx.createRadialGradient(bullet.x, bullet.y, 1, bullet.x, bullet.y, 5);
-        coreGradient.addColorStop(0, '#ffffff');
-        coreGradient.addColorStop(0.3, '#ffffaa');
-        coreGradient.addColorStop(1, 'transparent');
-
-        ctx.fillStyle = coreGradient;
-        ctx.beginPath();
-        ctx.arc(bullet.x, bullet.y, 4, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Bullet shine effect
-        ctx.fillStyle = '#ffffff';
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = bullet.color || '#0ff';
-        ctx.beginPath();
-        ctx.arc(bullet.x, bullet.y, 2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Bullet trail - energetic streak behind
-        if (Math.random() > 0.4) {
-            ctx.shadowBlur = 15;
-            
-            const trailColor = bullet.color || '#0ff';
-            ctx.strokeStyle = `rgba(${trailColor === '#0ff' ? '0, 255, 255' : '255, 100, 50'}, ${0.3 + Math.random() * 0.2})`;
-            ctx.lineWidth = 2;
-
-            const streakLength = trailLength + Math.random() * 10;
-            ctx.beginPath();
-            ctx.moveTo(
-                bullet.x - Math.cos(angle) * streakLength,
-                bullet.y - Math.sin(angle) * streakLength
-            );
-            ctx.lineTo(bullet.x, bullet.y);
-            ctx.stroke();
-        }
-
-        // Add starburst effect for new bullets
-        if (Math.random() > 0.8) {
-            const sparkX = bullet.x + (Math.random() - 0.5) * 8;
-            const sparkY = bullet.y + (Math.random() - 0.5) * 8;
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            ctx.arc(sparkX, sparkY, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        ctx.shadowBlur = 0;
+    ctx.shadowBlur = 0;
     });
 }
 
 // Create explosion particles - optimized for performance
 function createExplosion(x, y, color) {
-    // Reduced particle count for better performance
-    const debrisCount = 20;
+    const debrisCount = 12; // Reduced
     for (let i = 0; i < debrisCount; i++) {
-        particles.push({
-            x: x,
-            y: y,
-            vx: (Math.random() - 0.5) * 12,
-            vy: (Math.random() - 0.5) * 12,
-            life: 1.0,
-            color: color || Math.floor(Math.random() * 60),
-            size: 2 + Math.random() * 3,
-            type: 'debris',
-            decay: 0.96 + Math.random() * 0.03
-        });
-    }
-
-    // Reduced spark count
-    const sparkCount = 15;
-    for (let i = 0; i < sparkCount; i++) {
-        let hue;
-        const sparkType = Math.random();
-        if (sparkType < 0.35) hue = 180;
-        else if (sparkType < 0.65) hue = 300;
-        else if (sparkType < 0.85) hue = 40;
-        else hue = 0;
-
-        particles.push({
-            x: x,
-            y: y,
-            vx: (Math.random() - 0.5) * 18,
-            vy: (Math.random() - 0.5) * 18,
-            life: 1.0,
-            color: hue,
-            size: 1 + Math.random() * 3,
-            type: 'spark'
-        });
-    }
-
-    // Reduced fire count
-    const fireCount = 20;
-    for (let i = 0; i < fireCount; i++) {
-        let hue;
-        const fireType = Math.random();
-        if (fireType < 0.35) hue = 15;
-        else if (fireType < 0.65) hue = 45;
-        else if (fireType < 0.85) hue = 280;
-        else hue = 180;
-
         particles.push({
             x: x,
             y: y,
             vx: (Math.random() - 0.5) * 8,
             vy: (Math.random() - 0.5) * 8,
             life: 1.0,
-            color: hue,
-            size: 3 + Math.random() * 4,
+            color: color || Math.floor(Math.random() * 60),
+            size: 2 + Math.random() * 2,
+            type: 'debris',
+            decay: 0.96
+        });
+    }
+
+    const sparkCount = 8; // Reduced
+    for (let i = 0; i < sparkCount; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 12,
+            vy: (Math.random() - 0.5) * 12,
+            life: 1.0,
+            color: 180 + Math.random() * 120,
+            size: 1 + Math.random() * 2,
+            type: 'spark'
+        });
+    }
+
+    const fireCount = 10; // Reduced
+    for (let i = 0; i < fireCount; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 6,
+            vy: (Math.random() - 0.5) * 6,
+            life: 1.0,
+            color: 15 + Math.random() * 30,
+            size: 2 + Math.random() * 3,
             type: 'fire'
         });
     }
 
-    // Single shockwave ring (simplified)
     particles.push({
         x: x,
         y: y,
@@ -1020,12 +627,10 @@ function createExplosion(x, y, color) {
         type: 'shockwave'
     });
 
-    // Reduced burst count
-    const burstCount = 8;
+    const burstCount = 4; // Reduced
     for (let i = 0; i < burstCount; i++) {
         const angle = (i / burstCount) * Math.PI * 2;
-        const speed = 8 + Math.random() * 6;
-
+        const speed = 6 + Math.random() * 4;
         particles.push({
             x: x,
             y: y,
@@ -1033,9 +638,9 @@ function createExplosion(x, y, color) {
             vy: Math.sin(angle) * speed,
             life: 1.0,
             color: Math.floor(Math.random() * 60),
-            size: 1.5 + Math.random() * 2,
+            size: 1 + Math.random() * 1.5,
             type: 'burst',
-            decay: 0.92 + Math.random() * 0.06
+            decay: 0.94
         });
     }
 }
@@ -1064,74 +669,48 @@ function drawParticles() {
         ctx.globalAlpha = particle.life;
 
         if (particle.type === 'debris') {
-            // Simplified debris - reduced complexity
-            const size = particle.size * particle.life;
+        // Simplified debris - reduced complexity
+        const size = particle.size * particle.life;
 
-            ctx.fillStyle = `hsl(${particle.color}, 80%, ${70 * particle.life}%)`;
-            ctx.shadowBlur = 15 * particle.life;
-            ctx.shadowColor = ctx.fillStyle;
+        ctx.fillStyle = `hsl(${particle.color}, 80%, ${70 * particle.life}%)`;
+        ctx.shadowBlur = 5 * particle.life;
 
-            ctx.save();
-            ctx.translate(particle.x, particle.y);
-
-            // Draw simple diamond shape
-            ctx.beginPath();
-            ctx.moveTo(0, -size);
-            ctx.lineTo(size * 0.5, 0);
-            ctx.lineTo(0, size);
-            ctx.lineTo(-size * 0.5, 0);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.restore();
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
+        ctx.fill();
 
         } else if (particle.type === 'spark') {
-            // Simplified spark - solid color with basic trail
-            const speed = Math.sqrt(particle.vx * particle.vx + particle.vy * particle.vy);
-            const angle = Math.atan2(particle.vy, particle.vx);
-
             ctx.fillStyle = `hsl(${particle.color}, 100%, 75%)`;
-            ctx.shadowBlur = 20 * particle.life;
+            ctx.shadowBlur = 5 * particle.life;
 
-            // Draw simple streak
-            const size = particle.size;
+            const size = particle.size * particle.life;
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
             ctx.fill();
 
         } else if (particle.type === 'fire') {
-            // Simplified fire particle
             const size = particle.size * (1.5 - particle.life);
-
             ctx.fillStyle = `hsl(${particle.color}, 90%, ${60 + particle.life * 30}%)`;
-            ctx.shadowBlur = 25 * particle.life;
-            ctx.shadowColor = ctx.fillStyle;
-
+            ctx.shadowBlur = 10 * particle.life;
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
             ctx.fill();
 
         } else if (particle.type === 'shockwave') {
-            // Simplified shockwave ring
-            particle.radius += (8 + Math.random() * 4) * particle.life;
-
+            particle.radius += 6 * particle.life;
             if (!isFinite(particle.x) || !isFinite(particle.y) || !isFinite(particle.radius)) {
                 particles.splice(i, 1);
                 continue;
             }
-
             ctx.strokeStyle = `hsl(${particle.color}, 100%, ${50 + particle.life * 30}%)`;
-            ctx.lineWidth = 4 * particle.life;
-
+            ctx.lineWidth = 2 * particle.life;
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
             ctx.stroke();
 
         } else if (particle.type === 'burst') {
-            // Simplified burst particle
             ctx.fillStyle = `hsl(${particle.color}, 90%, ${70 + particle.life * 25}%)`;
-            ctx.shadowBlur = 15 * particle.life;
-
+            ctx.shadowBlur = 5 * particle.life;
             const size = particle.size * particle.life;
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2);
@@ -1162,7 +741,7 @@ function drawBackground() {
     nebulas.forEach(nebula => {
         nebula.rotation += nebula.rotationSpeed;
 
-        // Pulsing opacity for dramatic effect
+        // Pulsing opacity for dramatic effect - cached
         const pulse = Math.sin(Date.now() / (2000 + nebula.pulseSpeed * 1000)) * 0.02 + nebula.opacity;
 
         ctx.save();
@@ -1174,32 +753,15 @@ function drawBackground() {
         const [hue, sat, light] = nebula.hsl;
 
         gradient.addColorStop(0, `hsla(${hue}, ${sat}%, ${light}%, ${pulse * 1.5})`);
-        gradient.addColorStop(0.2, `hsla(${hue}, ${sat}%, ${light}%, ${pulse * 1.2})`);
         gradient.addColorStop(0.5, `hsla(${hue}, ${sat}%, ${light}%, ${pulse})`);
         gradient.addColorStop(1, 'transparent');
 
         ctx.fillStyle = gradient;
-        ctx.shadowBlur = 50 * pulse;
+        ctx.shadowBlur = 30 * pulse;
         ctx.shadowColor = `hsla(${hue}, ${sat}%, ${light}%, ${pulse})`;
         ctx.beginPath();
         ctx.arc(0, 0, nebula.size, 0, Math.PI * 2);
         ctx.fill();
-
-        // Add secondary ring for extra depth
-        ctx.shadowBlur = 30 * pulse;
-        ctx.strokeStyle = `hsla(${hue}, ${sat}%, ${light}%, ${pulse * 0.5})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(0, 0, nebula.size * 1.25, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Add faint outer glow ring
-        ctx.shadowBlur = 15 * pulse;
-        ctx.strokeStyle = `hsla(${hue}, ${sat}%, ${light}%, ${pulse * 0.2})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(0, 0, nebula.size * 1.5, 0, Math.PI * 2);
-        ctx.stroke();
 
         ctx.restore();
     });
@@ -1216,128 +778,79 @@ function drawBackground() {
         // Simple color calculation (no HSL parsing needed)
         const hue = star.hue + (Math.random() * 40 - 20);
 
-        // Simplified star rendering - reduce shadowBlur and gradient complexity
-        ctx.fillStyle = `hsla(${hue}, ${70 + Math.random() * 30}%, ${65 + Math.random() * 25}%, ${alpha})`;
+    // Simplified star rendering - reduce shadowBlur and gradient complexity
+    const hue = star.hue; // Use precomputed hue
 
-        // Draw simple star (reduced gradient complexity)
-        const twinkleSize = star.size * (0.5 + 0.5 * Math.sin(Date.now() / (100 + star.size * 20)));
-        const glowRadius = star.size * 3;
+    // Draw simple star (reduced gradient complexity)
+    const twinkleSize = star.size * (0.5 + 0.5 * Math.sin(Date.now() / (100 + star.size * 20)));
+    const glowRadius = star.size * 3;
 
-        // Simplified gradient for glow
-        ctx.shadowBlur = 15; // Reduced from star.size * 5
+    // Simplified gradient for glow
+    ctx.shadowBlur = 8; // Reduced from star.size * 5
 
-        const glowGradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, glowRadius);
-        glowGradient.addColorStop(0, `hsla(${hue}, ${70 + Math.random() * 30}%, ${80 + Math.random() * 25}%, ${alpha})`);
-        glowGradient.addColorStop(0.3, `hsla(${hue}, ${70 + Math.random() * 30}%, ${65 + Math.random() * 25}%, ${alpha * 0.5})`);
-        glowGradient.addColorStop(1, 'transparent');
+    const glowGradient = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, glowRadius);
+    glowGradient.addColorStop(0, `hsla(${hue}, 80%, 80%, ${alpha})`);
+    glowGradient.addColorStop(1, 'transparent');
 
-        ctx.fillStyle = glowGradient;
+    ctx.fillStyle = glowGradient;
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, glowRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw star core (simplified)
+    const coreAlpha = alpha * (0.7 + 0.3 * Math.sin(Date.now() / (150 + star.size * 25)));
+    ctx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
+    ctx.shadowBlur = 0;
+
+    const finalSize = twinkleSize * (0.5 + 0.3 * Math.sin(Date.now() / (180 + star.size * 20)));
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, finalSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Only draw cross for very bright stars (reduce draws)
+    if (star.size > 2.5) {
+        ctx.strokeStyle = `hsla(${hue}, 80%, 75%, ${alpha})`;
+        ctx.lineWidth = star.size * 0.6;
+
+        const crossSize = star.size * 2;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, glowRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Draw star core (simplified)
-        const coreAlpha = alpha * (0.7 + 0.3 * Math.sin(Date.now() / (150 + star.size * 25)));
-        ctx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
-        ctx.shadowBlur = 0;
-
-        const finalSize = twinkleSize * (0.5 + 0.3 * Math.sin(Date.now() / (180 + star.size * 20)));
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, finalSize, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Only draw cross for very bright stars (reduce draws)
-        if (star.size > 2.5) {
-            ctx.strokeStyle = `hsla(${hue}, ${70 + Math.random() * 30}%, ${75 + Math.random() * 25}%, ${alpha})`;
-            ctx.lineWidth = star.size * 0.6;
-
-            const crossSize = star.size * 2;
-            ctx.beginPath();
-            ctx.moveTo(star.x - crossSize, star.y);
-            ctx.lineTo(star.x + crossSize, star.y);
-            ctx.moveTo(star.x, star.y - crossSize);
-            ctx.lineTo(star.x, star.y + crossSize);
-            ctx.stroke();
-        }
-
-        // Draw faint comet trail (less frequently)
-        if (star.size > 2.0 && Math.random() > 0.95) {
-            ctx.strokeStyle = `hsla(${hue}, ${70 + Math.random() * 30}%, ${65 + Math.random() * 25}%, ${alpha * 0.3})`;
-            ctx.lineWidth = star.size * 0.4;
-
-            const trailLength = star.size * 15;
-            ctx.beginPath();
-            ctx.moveTo(star.x, star.y);
-            ctx.lineTo(star.x - trailLength * Math.cos(0.5), star.y - trailLength * Math.sin(0.5));
-            ctx.stroke();
-        }
+        ctx.moveTo(star.x - crossSize, star.y);
+        ctx.lineTo(star.x + crossSize, star.y);
+        ctx.moveTo(star.x, star.y - crossSize);
+        ctx.lineTo(star.x, star.y + crossSize);
+        ctx.stroke();
+    }
     });
 
     // Draw score popups
     drawFloatingTexts();
 }
 
-// Draw floating score text on asteroid explosions
-function drawFloatingTexts() {
-    for (let i = floatingTexts.length - 1; i >= 0; i--) {
-        const text = floatingTexts[i];
-        
-        // Update position and life
-        text.y -= 1; // Float upward
-        text.life -= 0.02;
-        
-        if (text.life <= 0) {
-            floatingTexts.splice(i, 1);
-            continue;
-        }
-        
-        ctx.save();
-        ctx.globalAlpha = text.life;
-        
-        // Score popup gradient
-        const scoreGradient = ctx.createLinearGradient(text.x - 20, text.y - 15, text.x + 20, text.y + 15);
-        scoreGradient.addColorStop(0, '#ffffff');
-        scoreGradient.addColorStop(0.5, '#ffff00');
-        scoreGradient.addColorStop(1, '#ffaa00');
-        
-        ctx.fillStyle = scoreGradient;
-        ctx.font = `900 ${text.size}px 'Courier New', monospace`;
-        
-        // Add glow effect
-        ctx.shadowColor = '#ffaa00';
-        ctx.shadowBlur = 10 + text.life * 20;
-        
-        // Center the text
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        // Draw shadow for depth
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#ff0066';
-        ctx.fillText('+' + text.text, text.x, text.y);
-        
-        // Draw main text
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = scoreGradient;
-        ctx.fillText('+' + text.text, text.x, text.y);
-        
-        // Add small explosion particles around score
-        if (text.life > 0.8) {
-            for (let j = 0; j < 3; j++) {
-                const px = text.x + (Math.random() - 0.5) * 40;
-                const py = text.y + (Math.random() - 0.5) * 20;
-                const size = Math.random() * 4 + 1;
-                
-                ctx.fillStyle = `rgba(255, 200, 0, ${text.life})`;
-                ctx.beginPath();
-                ctx.arc(px, py, size, 0, Math.PI * 2);
-                ctx.fill();
+    // Draw floating score text on asteroid explosions
+    function drawFloatingTexts() {
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+            const text = floatingTexts[i];
+
+            text.y -= 1;
+            text.life -= 0.02;
+
+            if (text.life <= 0) {
+                floatingTexts.splice(i, 1);
+                continue;
             }
+
+            ctx.save();
+            ctx.globalAlpha = text.life;
+            ctx.fillStyle = '#ffff00';
+            ctx.font = `900 ${text.size}px 'Courier New', monospace`;
+            ctx.shadowColor = '#ffaa00';
+            ctx.shadowBlur = 5;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('+' + text.text, text.x, text.y);
+            ctx.restore();
         }
-        
-        ctx.restore();
     }
-}
 
 // Draw title screen with enhanced graphics
 function drawTitleScreen() {
@@ -1358,38 +871,16 @@ function drawTitleScreen() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Draw title text with shadow
-    const titleText = 'ASTEROIDS';
-    ctx.shadowBlur = 40;
-    ctx.shadowColor = '#ffaa00';
-    
-    // Slight pulse effect on title
-    const pulseScale = 1 + Math.sin(Date.now() / 500) * 0.02;
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 3);
-    
-    // Create gradient for each letter
-    ctx.font = '900 72px "Courier New", monospace';
-    
-    // Draw individual letters with colors
-    const letterSpacing = 10;
-    let x = -(titleText.length * 20);
-    
-    for (let i = 0; i < titleText.length; i++) {
-        const letter = titleText[i];
-        const hue = (i * 30 + Date.now() / 20) % 360;
-        ctx.fillStyle = `hsl(${hue}, 100%, 85%)`;
-        ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+        // Draw title text with shadow
+        const titleText = 'ASTEROIDS';
+        ctx.shadowBlur = 40;
+        ctx.shadowColor = '#ffaa00';
         
+        // Slight pulse effect on title
         ctx.save();
-        ctx.scale(pulseScale, pulseScale);
-        ctx.fillText(letter, x, 0);
+        ctx.translate(canvas.width / 2, canvas.height / 3);
+        ctx.fillText(titleText, 0, 0);
         ctx.restore();
-        
-        x += 35;
-    }
-    
-    ctx.restore();
 
     // Draw subtitle with glowing effect
     ctx.shadowBlur = 20;
