@@ -1,4 +1,4 @@
-// Mr. PacMan Game Implementation with Maze and Collision Detection
+// Mrs. PacMan Game Implementation with Maze and Collision Detection
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
@@ -45,14 +45,15 @@ const cellSize = 30;
 const rows = mazeLayout.length;
 const cols = mazeLayout[0].length;
 
-// PacMan properties
+// Mrs. PacMan properties
 const pacman = {
     x: 50,
     y: 50,
     radius: 12,
     speed: 3,
     direction: 'right',
-    flashColor: false // Used when eating ghost in power mode
+    flashColor: false, // Used when eating ghost in power mode
+    mouthPhase: 0 // For mouth animation
 };
 
 // Ghosts array
@@ -78,7 +79,7 @@ const food = [];
 // Power-up orbs are placed in the maze corners and key positions
 function createPowerOrbs() {
     powerOrbs = [];
-    
+
     // Place orbs in corners and strategic locations
     const orbPositions = [
         { col: 1, row: 1 },
@@ -86,7 +87,7 @@ function createPowerOrbs() {
         { col: 1, row: 14 },
         { col: 18, row: 14 }
     ];
-    
+
     orbPositions.forEach(pos => {
         powerOrbs.push({
             x: pos.col * cellSize + cellSize / 2,
@@ -143,7 +144,7 @@ function drawMaze() {
                 // Draw wall
                 ctx.fillStyle = '#0033FF';
                 ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
-                
+
                 // Draw wall details
                 ctx.strokeStyle = '#0066FF';
                 ctx.lineWidth = 2;
@@ -153,33 +154,92 @@ function drawMaze() {
     }
 }
 
-// Draw PacMan
+// Draw Mrs. PacMan
 function drawPacman() {
+    // Update mouth animation phase
+    pacman.mouthPhase += 0.2;
+
     ctx.beginPath();
     ctx.arc(pacman.x, pacman.y, pacman.radius, 0, Math.PI * 2);
     ctx.fillStyle = '#FFD700'; // Bright yellow for better visibility
     ctx.fill();
     ctx.closePath();
 
-    // Draw mouth with high contrast
+    // Draw bow on Mrs. Pacman - distinctive pink bow
+    ctx.fillStyle = '#FF69B4'; // Hot pink for bow
+    const bowSize = pacman.radius * 0.6;
+
+    // Bow knot
+    ctx.beginPath();
+    ctx.arc(pacman.x, pacman.y - pacman.radius * 0.7, bowSize * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bow left loop
+    ctx.beginPath();
+    ctx.ellipse(pacman.x - bowSize * 0.5, pacman.y - pacman.radius * 0.4, bowSize * 0.4, bowSize * 0.6, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bow right loop
+    ctx.beginPath();
+    ctx.ellipse(pacman.x + bowSize * 0.5, pacman.y - pacman.radius * 0.4, bowSize * 0.4, bowSize * 0.6, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw eyes
+    ctx.fillStyle = '#000';
+    const eyeOffsetX = 0;
+    const eyeOffsetY = -pacman.radius * 0.3;
+    const eyeSize = pacman.radius * 0.25;
+
+    // Left eye
+    ctx.beginPath();
+    ctx.arc(pacman.x - eyeOffsetX * 0.5, pacman.y + eyeOffsetY, eyeSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Right eye
+    ctx.beginPath();
+    ctx.arc(pacman.x + eyeOffsetX * 0.5, pacman.y + eyeOffsetY, eyeSize, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye whites for expression
+    ctx.fillStyle = '#FFF';
+    ctx.beginPath();
+    ctx.arc(pacman.x - eyeOffsetX * 0.5, pacman.y + eyeOffsetY, eyeSize * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(pacman.x + eyeOffsetX * 0.5, pacman.y + eyeOffsetY, eyeSize * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye pupils
+    ctx.fillStyle = '#000';
+    const pupilOffset = Math.sin(pacman.mouthPhase) * 1.5;
+    ctx.beginPath();
+    ctx.arc(pacman.x - eyeOffsetX * 0.5 + pupilOffset, pacman.y + eyeOffsetY, eyeSize * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(pacman.x + eyeOffsetX * 0.5 + pupilOffset, pacman.y + eyeOffsetY, eyeSize * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw animated mouth with high contrast
     ctx.beginPath();
     let startAngle, endAngle;
+    // Animate mouth opening/closing
+    const mouthAnim = 0.1 + 0.1 * Math.abs(Math.sin(pacman.mouthPhase));
     switch(pacman.direction) {
         case 'right':
-            startAngle = 0.2 * Math.PI;
-            endAngle = 1.8 * Math.PI;
+            startAngle = 0.2 * Math.PI + mouthAnim;
+            endAngle = 1.8 * Math.PI - mouthAnim;
             break;
         case 'left':
-            startAngle = 1.2 * Math.PI;
-            endAngle = 0.8 * Math.PI;
+            startAngle = 1.2 * Math.PI + mouthAnim;
+            endAngle = 0.8 * Math.PI - mouthAnim;
             break;
         case 'up':
-            startAngle = 1.7 * Math.PI;
-            endAngle = 1.3 * Math.PI;
+            startAngle = 1.7 * Math.PI + mouthAnim;
+            endAngle = 1.3 * Math.PI - mouthAnim;
             break;
         case 'down':
-            startAngle = 0.7 * Math.PI;
-            endAngle = 0.3 * Math.PI;
+            startAngle = 0.7 * Math.PI + mouthAnim;
+            endAngle = 0.3 * Math.PI - mouthAnim;
             break;
     }
     ctx.arc(pacman.x, pacman.y, pacman.radius, startAngle, endAngle);
@@ -197,7 +257,7 @@ function drawGhosts() {
     ghosts.forEach(ghost => {
         // Determine ghost color based on state
         let drawColor;
-        
+
         if (isGhostEaten(ghost)) {
             // Eaten ghost - just show eyes (invisible body)
             drawColor = 'transparent';
@@ -212,7 +272,7 @@ function drawGhosts() {
             // Normal ghost color
             drawColor = ghost.color;
         }
-        
+
         ctx.beginPath();
         ctx.arc(ghost.x, ghost.y, ghost.radius, 0, Math.PI * 2);
         ctx.fillStyle = drawColor;
@@ -252,12 +312,12 @@ function drawFood() {
 let frameCount = 0;
 function drawPowerOrbs() {
     frameCount++;
-    
+
     powerOrbs.forEach(orb => {
         // Calculate pulsing effect
         const pulse = Math.sin(frameCount * 0.1 + orb.pulsePhase) * 2;
         const currentRadius = orb.radius + pulse;
-        
+
         // Outer glow
         ctx.beginPath();
         ctx.arc(orb.x, orb.y, currentRadius + 4, 0, Math.PI * 2);
@@ -267,13 +327,13 @@ function drawPowerOrbs() {
         ctx.fillStyle = glowGradient;
         ctx.fill();
         ctx.closePath();
-        
+
         // Inner circle
         ctx.beginPath();
         ctx.arc(orb.x, orb.y, currentRadius, 0, Math.PI * 2);
         ctx.fillStyle = '#89CCFF'; // Light blue
         ctx.fill();
-        
+
         // Outer ring
         ctx.strokeStyle = '#FFF';
         ctx.lineWidth = 2;
@@ -348,7 +408,7 @@ function moveGhosts() {
     ghosts.forEach(ghost => {
         // Determine ghost speed based on state
         let currentSpeed = ghost.speed;
-        
+
         if (isGhostEaten(ghost)) {
             // Eaten ghosts move faster back to their respawn point
             currentSpeed = ghost.speed * 1.5;
@@ -356,22 +416,22 @@ function moveGhosts() {
             // Vulnerable ghosts move slower
             currentSpeed = ghost.speed * 0.5;
         }
-        
+
         // Simple AI: random movement with some direction changes
         if (Math.random() < 0.02 && !isGhostEaten(ghost)) {
             const directions = ['up', 'down', 'left', 'right'];
             ghost.direction = directions[Math.floor(Math.random() * directions.length)];
         }
-        
+
         // If eaten, move toward center spawn point
         if (isGhostEaten(ghost)) {
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2 + cellSize; // Slightly below center
-            
+
             if (Math.abs(ghost.x - centerX) > 5 || Math.abs(ghost.y - centerY) > 5) {
                 if (ghost.x < centerX) ghost.x += currentSpeed;
                 else if (ghost.x > centerX) ghost.x -= currentSpeed;
-                
+
                 if (ghost.y < centerY) ghost.y += currentSpeed;
                 else if (ghost.y > centerY) ghost.y -= currentSpeed;
             } else {
@@ -380,10 +440,10 @@ function moveGhosts() {
                 else if (ghost.color === '#00FFFF') { ghost.x = 350; ghost.y = 200; }
                 else if (ghost.color === '#FF00FF') { ghost.x = 150; ghost.y = 300; }
                 else if (ghost.color === '#FFFF00') { ghost.x = 450; ghost.y = 300; }
-                
+
                 ghost.eaten = false;
             }
-            
+
             // Continue to next ghost
             return;
         }
@@ -445,19 +505,19 @@ function checkCollisions() {
 
         if (distance < pacman.radius + orb.radius) {
             powerOrbs.splice(i, 1);
-            
+
             // Activate power mode
             const now = Date.now();
             if (!powerModeActive || now > powerModeEndTime) {
                 powerModeActive = true;
                 powerModeEndTime = now + POWER_UP_DURATION;
-                
+
                 // Decrease speed of vulnerable ghosts
                 ghosts.forEach(g => {
                     if (!g.eaten) g.wasEatenDuringPower = false;
                 });
             }
-            
+
             // Replenish the orb for continuous gameplay (respawn after delay)
             setTimeout(() => {
                 if (!powerOrbs.some(o => o.x === orb.x && o.y === orb.y)) {
@@ -488,7 +548,7 @@ function checkCollisions() {
 
     // Check ghost collisions
     const now = Date.now();
-    
+
     ghosts.forEach(ghost => {
         const dx = pacman.x - ghost.x;
         const dy = pacman.y - ghost.y;
@@ -500,23 +560,23 @@ function checkCollisions() {
             } else if (isGhostVulnerable(ghost)) {
                 // Eat the ghost!
                 ghost.eaten = true;
-                
+
                 // Ghost respawns after 4 seconds
                 setTimeout(() => {
                     if (ghost.eaten) {
                         // Move to center spawn point
                         const centerX = canvas.width / 2;
                         const centerY = canvas.height / 2 + cellSize;
-                        
+
                         if (ghost.color === '#FF0000') { ghost.x = 200; ghost.y = 150; }
                         else if (ghost.color === '#00FFFF') { ghost.x = 350; ghost.y = 200; }
                         else if (ghost.color === '#FF00FF') { ghost.x = 150; ghost.y = 300; }
                         else if (ghost.color === '#FFFF00') { ghost.x = 450; ghost.y = 300; }
-                        
+
                         ghost.eaten = false;
                     }
                 }, 4000); // Ghost respawns after 4 seconds
-                
+
                 score += 200;
                 scoreElement.textContent = score;
             } else {
@@ -567,14 +627,14 @@ function restartGame() {
     ghosts[1].x = 350; ghosts[1].y = 200;
     ghosts[2].x = 150; ghosts[2].y = 300;
     ghosts[3].x = 450; ghosts[3].y = 300;
-    
+
     // Reset ghost eaten state
     ghosts.forEach(g => g.eaten = false);
 
     // Reset power mode
     powerModeActive = false;
     powerOrbs.length = 0;
-    
+
     // Create power orbs
     createPowerOrbs();
 
@@ -608,26 +668,26 @@ function gameLoop() {
         const now = Date.now();
         const timeLeft = Math.max(0, powerModeEndTime - now);
         const secondsLeft = (timeLeft / 1000).toFixed(1);
-        
+
         ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
         ctx.font = 'bold 16px "Courier New", monospace';
         ctx.textAlign = 'center';
-        
+
         // Draw warning if time is running out
         if (timeLeft < 2000) {
             ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
             ctx.shadowColor = 'red';
             ctx.shadowBlur = 5;
         }
-        
+
         ctx.fillText('POWER MODE: ' + secondsLeft + 's', canvas.width / 2, 30);
-        
+
         // Draw glowing effect
         const pulse = Math.sin(now * 0.01) * 3;
         ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
         ctx.lineWidth = 3;
         ctx.strokeRect(10 + pulse, 25 + pulse, canvas.width - 20 - 2*pulse, canvas.height - 25 - 10);
-        
+
         ctx.restore();
     }
 
